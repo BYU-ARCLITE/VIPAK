@@ -1,20 +1,13 @@
-#kbpos0,#kbpos1{position:relative;}
+#kbpos0,#kbpos1{position:absolute;}
 
-/*#kbpos0{left:0;right:40%;}
+#kbpos0{left:0;right:40%;}
 
-#kbpos1{right:0;left:61%;}*/
+#kbpos1{right:0;left:61%;}
 
-.kbwpr,
-.kbsection,
-.kbsectitle,
-.kblset,
-.kblsetitle,
-.kbkgrp,
-.kbletter{position:relative;}
-
+.kbwpr{max-width:500px; position:relative}
 
 .kbsectitle{background-color:#BEA071;}
-.kblsetitle{background-color:#A80CAF;}
-.kblset{display:inline-block; background-color:#D5D3CC; margin-bottom:1px;}
+.kblsetitle{background-color:#A80CAF; padding:1px 4px; border-radius:12px;}
+.kblset{display:inline-block; background-color:#D5D3CC; margin-bottom:1px; margin-left:1px;}
 
-.kbtng > .btn{float:none;}
+.kbtng > .btn{float:none; padding:0px 4px;}

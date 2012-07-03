@@ -1,40 +1,31 @@
-
-
 $(function(){
   var fct = new KeyboardFactory();
   var kb = fct.fullkeyboard();
   $('body').append(kb.html);
   $('.kbwpr').hide();
+  var cS,cE,field;
   $('input[type=text],input[type=textbox],textarea').focusin(function(){
-      $(kb.html).find('.kbletter').unbind();
-      $(this).useKeyboard(kb);
-      lastbox = $(this);
+      $(kb.html).slideDown('fast');
+      field = $(this);
   });
-});
-$.fn.useKeyboard = function(kb){
-  var cS,cE,field = $(this);
-  $(this).after(kb.html);
-  lastbox = $(this);
-  $(kb.html).slideDown('fast');
   $(kb.html).find('.kbletter').click(function(){
     cS = field.caret().start, cE = field.caret().end;
     var str = field.attr('value');
     var sub1 = str.substring(0,cS), sub2 = str.substring(cE);
-    console.log(cS+":"+cE+"-"+sub1+"\n"+cE+sub2);
     field.attr('value', sub1 + $(this).attr('letter') + sub2);
     field.focus();
     cS = cS+$(this).attr('letter').length;
     cE = cS;
     field.caret(cE,cE);
   });
-};
+});
 function KeyboardFactory(){
   this.fullkeyboard = function(){
     var k;
     k = new Keyboard();
     k.dict = k.ipa_full;
     k.organize();
-    console.log("made keyboard");
+    
     return k;
   };
 }
@@ -63,20 +54,6 @@ function Letter(){
     return this.letter + ":" + this.title;
   }
 }
-
-function checkCharWidth(chr)
-{
-  var f = document.createElement('span'), g = 'bkeirbareren143e', h;
-  f.setAttribute('id', g); 
-  f.innerHTML = chr; 
-  document.body.appendChild(f);
-  h = f.offsetWidth;
-  document.body.removeChild(f);
-  return h>0 ? false : true;
-}
-// this function is not yet specialized for the keyboard.  I will use its elements to both create the keyboard and to test if a character is a top character (with zero width, using object.clientWidth)
-
-
 function Keyboard(){
   this.Left = [];
   this.Right = [];
@@ -84,6 +61,7 @@ function Keyboard(){
   this.position = [];
   this.parentId = null;
   this.dict = null;
+  this.focusBox = null;
   this.organize = function(){
     if(this.dict == null)
     {
@@ -98,7 +76,7 @@ function Keyboard(){
       posel.setAttribute('id', 'kbpos'+location);
       
       for(type in this.dict[location]){
-	console.log(type);
+	
 	sectn = new KeySection();
 	sectn.title = type;
 	sectn.elmnt = document.createElement('div');
@@ -155,7 +133,7 @@ function Keyboard(){
       this.html.appendChild(posel);
       this.position.push(posel);
     }
-    console.log(counter);
+    
   };
   this.ipa_full = {
     "0"	:
@@ -212,7 +190,17 @@ function Keyboard(){
       ] 
     }
   };
-  
+}
+
+function checkCharWidth(chr)
+{
+  var f = document.createElement('span'), g = 'bkeirbareren143e', h;
+  f.setAttribute('id', g); 
+  f.innerHTML = chr; 
+  document.body.appendChild(f);
+  h = f.offsetWidth;
+  document.body.removeChild(f);
+  return h>0 ? false : true;
 }
 /*
  *The following function is a jQuery plugin
