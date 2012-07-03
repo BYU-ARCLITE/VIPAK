@@ -1,8 +1,8 @@
 
 
 $(function(){
-  var fct = new KeyboardFactory(), 
-  kb = fct.fullkeyboard(), 
+  var fct = new KeyboardFactory();
+  var kb = fct.fullkeyboard();
   $('body').append(kb.html);
   $('.kbwpr').hide();
   var lastbox;
