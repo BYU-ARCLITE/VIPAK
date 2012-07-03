@@ -1,0 +1,20 @@
+#kbpos0,#kbpos1{position:relative;}
+
+/*#kbpos0{left:0;right:40%;}
+
+#kbpos1{right:0;left:61%;}*/
+
+.kbwpr,
+.kbsection,
+.kbsectitle,
+.kblset,
+.kblsetitle,
+.kbkgrp,
+.kbletter{position:relative;}
+
+
+.kbsectitle{background-color:#BEA071;}
+.kblsetitle{background-color:#A80CAF;}
+.kblset{display:inline-block; background-color:#D5D3CC; margin-bottom:1px;}
+
+.kbtng > .btn{float:none;}
