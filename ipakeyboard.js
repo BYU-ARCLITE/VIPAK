@@ -5,21 +5,14 @@ $(function(){
   var kb = fct.fullkeyboard();
   $('body').append(kb.html);
   $('.kbwpr').hide();
-  var lastbox;
   $('input[type=text],input[type=textbox],textarea').focusin(function(){
-    if(!($(this).hasClass('keyboarding'))){
-      if(lastbox){
-	lastbox.removeClass('keyboarding');
-      }
       $(kb.html).find('.kbletter').unbind();
       $(this).useKeyboard(kb);
       lastbox = $(this);
-    }
   });
 });
 $.fn.useKeyboard = function(kb){
   var cS,cE,field = $(this);
-  $(this).addClass('keyboarding');
   $(this).after(kb.html);
   lastbox = $(this);
   $(kb.html).slideDown('fast');
@@ -34,7 +27,7 @@ $.fn.useKeyboard = function(kb){
     cE = cS;
     field.caret(cE,cE);
   });
-}
+};
 function KeyboardFactory(){
   this.fullkeyboard = function(){
     var k;
@@ -96,18 +89,14 @@ function Keyboard(){
     {
       return false;
     }
-    var location;
-    var type;
-    var lset;
-    var lettr;
-    var sectn;
-    var lst, let;
+    var location, type, lset, lettr, sectn, lst, let, indx, counter=0;
     var title1, title2, posel, kgp;
     this.html = document.createElement('div');
     this.html.setAttribute('class', 'kbwpr');
     for(location in this.dict){
       posel = document.createElement('div');
       posel.setAttribute('id', 'kbpos'+location);
+      
       for(type in this.dict[location]){
 	console.log(type);
 	sectn = new KeySection();
@@ -118,122 +107,113 @@ function Keyboard(){
 	title1.setAttribute('class', 'label kbsectitle');
 	title1.innerHTML = sectn.title;
 	sectn.elmnt.appendChild(title1);
-	for(lset in this.dict[location][type]){
-	  lst = new LetterSet();
-	  lst.title = lset;
-	  lst.elmnt = document.createElement('span');
-	  lst.elmnt.setAttribute('class', 'kblset badge');
-	  lst.elmnt.setAttribute('id', lst.title);
-	  title2 = document.createElement('span');
-	  title2.setAttribute('class', 'kblsetitle badge badge-info');
-	  title2.innerHTML = lst.title;
-	  lst.elmnt.appendChild(title2);
-	  kgp = document.createElement('span');
-	  kgp.setAttribute('class', 'kbtng btn-group');
-	  for(lettr in this.dict[location][type][lset]){
-	    let = new Letter();
-	    let.letter = lettr;
-	    let.isScript = checkCharWidth(lettr);
-	    let.title = this.dict[location][type][lset][lettr];
-	    let.elmnt = document.createElement('button');
-	    let.elmnt.setAttribute('class', 'kbletter btn');
-	    let.elmnt.setAttribute('id', 'kbl'+let.letter);
-	    let.elmnt.setAttribute('title', let.title);
-	    let.elmnt.setAttribute('letter', let.letter);
-	    let.elmnt.innerHTML = (let.isScript? '&nbsp;':'')+let.letter;
-	    lst.letterset.push(let);
-	    kgp.appendChild(let.elmnt);
+	for(indx in this.dict[location][type]){
+	  for(lset in this.dict[location][type][indx]){
+	    lst = new LetterSet();
+	    lst.title = lset;
+	    lst.elmnt = document.createElement('span');
+	    lst.elmnt.setAttribute('class', 'kblset label');
+	    lst.elmnt.setAttribute('id', lst.title);
+	    title2 = document.createElement('span');
+	    title2.setAttribute('class', 'kblsetitle badge');
+	    title2.innerHTML = lst.title;
+	    lst.elmnt.appendChild(title2);
+	    kgp = document.createElement('span');
+	    kgp.setAttribute('class', 'kbtng btn-group');
+	    for(lettr in this.dict[location][type][indx][lset]){
+	      let = new Letter();
+	      let.letter = lettr;
+	      let.isScript = checkCharWidth(lettr);
+	      let.title = this.dict[location][type][indx][lset][lettr];
+	      let.elmnt = document.createElement('button');
+	      let.elmnt.setAttribute('class', 'kbletter btn');
+	      let.elmnt.setAttribute('id', 'kbl'+let.letter);
+	      let.elmnt.setAttribute('title', let.title);
+	      let.elmnt.setAttribute('letter', let.letter);
+	      let.elmnt.innerHTML = (let.isScript? '&nbsp;':'')+let.letter;
+	      lst.letterset.push(let);
+	      kgp.appendChild(let.elmnt);
+	      
+	    }
+	    counter=counter+1;
+	    lst.elmnt.appendChild(kgp);
+	    sectn.keyset.push(lst);
+	    sectn.elmnt.appendChild(lst.elmnt);
 	  }
-	  lst.elmnt.appendChild(kgp);
-	  sectn.keyset.push(lst);
-	  sectn.elmnt.appendChild(lst.elmnt);
+	  if(location=="0"){
+	    this.Left.push(sectn);
+	  }
+	  if(location=="1"){
+	    this.Right.push(sectn);
+	  }
+	  if(location=="2"){
+	    this.Center.push(sectn);
+	  }
+	  posel.appendChild(sectn.elmnt);
 	}
-	if(location=="0"){
-	  this.Left.push(sectn);
-	}
-	if(location=="1"){
-	  this.Right.push(sectn);
-	}
-	if(location=="2"){
-	  this.Center.push(sectn);
-	}
-	posel.appendChild(sectn.elmnt);
       }
-      
       this.html.appendChild(posel);
       this.position.push(posel);
     }
+    console.log(counter);
   };
   this.ipa_full = {
     "0"	:
     {
       "vowels"	:
-      {
-	"A" : { "æ":"near-open front unrounded", "ɐ":"near-open central", "ɑ":"open back unrounded", "ɒ":"open back rounded"},
-	"E" : { "ə":"mid-central (schwa)", "ɚ":"rhotacized mid-central", "ɵ":"close-mid central rounded", "ɘ":"close-mid central unrounded",},
-	"EE" : { "ɜ":"open-mid central unrounded", "ɝ":"rhotacized open-mid central unrounded", "ɛ":"open-mid front unrounded", "ɛ̃":"nasalized open-mid front unrounded", "ɞ":"open-mid central rounded"},
-	"I" : { "ɨ":"close central unrounded", "ɪ":"near-close near-front unrounded",},
-	"O" : { "ɔ":"open-mid back rounded", "ɤ":"close-mid back unrounded", "ø":"close-mid front rounded", "œ":"open-mid front rounded", "ɶ":"open front rounded"},
-	"U" : { "ʌ":"open-mid back unrounded", "ʊ":"near-close near-back rounded", "ʉ":"close central rounded", "ɯ":"close back unrounded"},
-	"Y" : { "ʏ":"near-close near-front rounded"},
-	
-      },
+      [
+	{"A" : { "æ":"near-open front unrounded", "ɐ":"near-open central", "ɑ":"open back unrounded", "ɒ":"open back rounded"}},
+	{"E" : { "ə":"mid-central (schwa)", "ɚ":"rhotacized mid-central", "ɵ":"close-mid central rounded", "ɘ":"close-mid central unrounded",}},
+	{"3" : { "ɜ":"open-mid central unrounded", "ɝ":"rhotacized open-mid central unrounded", "ɛ":"open-mid front unrounded", "ɛ̃":"nasalized open-mid front unrounded", "ɞ":"open-mid central rounded"}},
+	{"I" : { "ɨ":"close central unrounded", "ɪ":"near-close near-front unrounded",}},
+	{"O" : { "ɔ":"open-mid back rounded", "ɤ":"close-mid back unrounded", "ø":"close-mid front rounded", "œ":"open-mid front rounded", "ɶ":"open front rounded"}},
+	{"U" : { "ʌ":"open-mid back unrounded", "ʊ":"near-close near-back rounded", "ʉ":"close central rounded", "ɯ":"close back unrounded"}},
+	{"Y" : { "ʏ":"near-close near-front rounded"}}
+      ],
       "consonants"	:
-      {
-	"B" : { "β":"voiced bilabial fricative", "ʙ":"bilabial trill", "ɓ":"voiced bilabial implosive"},
-	"C" : { "ɕ":"voiceless alveopalatal fricative", "ç":"voiceless palatal fricative"},
-	"D" : { "ð":"voiced dental fricative", "d͡ʒ":"voiced postalveolar fricative", "ɖ":"voiced retroflex plosive", "ɗ":"voiced alveolar implosive", "ᶑ":"voiced retroflex implosive"},
-	"G" : { "ɠ":"voiced velar implosive", "ɢ":"voiced uvular plosive", "ʛ":"voiced uvular implosive"},
-	"H" : { "ɦ":"voiced glottal fricative", "ħ":"voiceless pharyngeal fricative", "ɧ":"voiceless palatal-velar fricative", "ʜ":"voiceless epiglottal fricative", "ɥ":"labial-palatal approximant"},
-	"J" : { "ʝ":"voiced palatal fricative", "ɟ":"voiced palatal plosive", "ʄ":"voiced palatal implosive", "ʎ":"palatal lateral approximant"},
-	"L" : { "ɫ":"velarized alveolar lateral approximant", "ɮ":"voiced alveolar lateral fricative", "ɭ":"retroflex lateral approximant", "ɬ":"voiceless alveolar lateral fricative", "ʟ":"velar lateral approximant"},
-	"M" : { "ɱ":"labiodental nasal"},
-	"N" : { "ŋ":"velar nasal", "ɲ":"palatal nasal", "ɴ":"uvular nasal", "ɳ":"retroflex nasal"},
-	"P" : { "ɸ":"voiceless bilabial fricative"},
-	"R" : { "ɹ":"alveolar approximant", "ɾ":"alveolar tap", "ʁ":"voiced uvular fricative", "ʀ":"uvular trill", "ɻ":"retroflex approximant", "ɽ":"retroflex flap", "ɺ":"alveolar lateral flap"},
-	"S" : { "ʃ":"voiceless postalveolar fricative", "ʂ":"voiceless retroflex fricative"},
-	"T" : { "θ":"voiceless dental fricative", "ʈ":"voiceless retroflex plosive", "t͡ʃ":"voiceless postalveolar fricative", "t͡s":"voiceless alveolar fricative"},
-	"V" : { "ⱱ":"labiodental flap", "ʋ":"labiodental approximant", "ɣ":"voiced velar fricative"},
-	"W" : { "ɰ":"velar approximant", "ʍ":"voiceless labio-velar approximant"},
-	"X" : { "χ":"voiceless uvular fricative"},
-	"Z" : { "ʒ":"voiced postalveolar fricative", "ʐ":"voiced retroflex fricative", "ʑ":"voiced alveopalatal fricative"},
-	"Z1" : { "ʔ":"glottal stop", "ʕ":"voiced pharyngeal fricative", "ʢ":"voiced epiglottal fricative", "ʡ":"epiglottal plosive",},
-	"Z2" : { "ʘ":"bilabial click", "ǀ":"dental click", "ǃ":"retroflex click", "ǂ":"postalveolar click", "ǁ":"alveolar lateral click"}
-      }
+      [
+	{"B" : { "β":"voiced bilabial fricative", "ʙ":"bilabial trill", "ɓ":"voiced bilabial implosive"}},
+	{"C" : { "ɕ":"voiceless alveopalatal fricative", "ç":"voiceless palatal fricative"}},
+	{"D" : { "ð":"voiced dental fricative", "d͡ʒ":"voiced postalveolar fricative", "ɖ":"voiced retroflex plosive", "ɗ":"voiced alveolar implosive", "ᶑ":"voiced retroflex implosive"}},
+	{"G" : { "ɠ":"voiced velar implosive", "ɢ":"voiced uvular plosive", "ʛ":"voiced uvular implosive"}},
+	{"H" : { "ɦ":"voiced glottal fricative", "ħ":"voiceless pharyngeal fricative", "ɧ":"voiceless palatal-velar fricative", "ʜ":"voiceless epiglottal fricative", "ɥ":"labial-palatal approximant"}},
+	{"J" : { "ʝ":"voiced palatal fricative", "ɟ":"voiced palatal plosive", "ʄ":"voiced palatal implosive", "ʎ":"palatal lateral approximant"}},
+	{"L" : { "ɫ":"velarized alveolar lateral approximant", "ɮ":"voiced alveolar lateral fricative", "ɭ":"retroflex lateral approximant", "ɬ":"voiceless alveolar lateral fricative", "ʟ":"velar lateral approximant"}},
+	{"M" : { "ɱ":"labiodental nasal"}},
+	{"N" : { "ŋ":"velar nasal", "ɲ":"palatal nasal", "ɴ":"uvular nasal", "ɳ":"retroflex nasal"}},
+	{"P" : { "ɸ":"voiceless bilabial fricative"}},
+	{"R" : { "ʁ":"voiced uvular fricative", "ʀ":"uvular trill", "ɹ":"alveolar approximant", "ɾ":"alveolar tap", "ɻ":"retroflex approximant", "ɽ":"retroflex flap", "ɺ":"alveolar lateral flap"}},
+	{"S" : { "ʃ":"voiceless postalveolar fricative", "ʂ":"voiceless retroflex fricative"}},
+	{"T" : { "θ":"voiceless dental fricative", "ʈ":"voiceless retroflex plosive", "t͡ʃ":"voiceless postalveolar fricative", "t͡s":"voiceless alveolar fricative"}},
+	{"V" : { "ⱱ":"labiodental flap", "ʋ":"labiodental approximant", "ɣ":"voiced velar fricative"}},
+	{"W" : { "ɰ":"velar approximant", "ʍ":"voiceless labio-velar approximant"}},
+	{"X" : { "χ":"voiceless uvular fricative"}},
+	{"Z" : { "ʒ":"voiced postalveolar fricative", "ʐ":"voiced retroflex fricative", "ʑ":"voiced alveopalatal fricative"}},
+	{"?" : { "ʔ":"glottal stop", "ʕ":"voiced pharyngeal fricative", "ʢ":"voiced epiglottal fricative", "ʡ":"epiglottal plosive",}},
+	{"0" : { "ʘ":"bilabial click", "ǀ":"dental click", "ǃ":"retroflex click", "ǂ":"postalveolar click", "ǁ":"alveolar lateral click"}}
+      ]
     },
     "1"	:
     {
       "diacritics"	:
-      {
-	"3" : { "ʰ":"aspirated", "ʷ":"labialized", "ʲ":"palatalized", "ˠ":"velarized", "ˤ":"pharyngealized", "ⁿ":"nasal release", "ˡ":"lateral release", "ʱ":"breathy-voice aspirated", "ᵊ":"syllabic or schwa", "ʳ":"optional r", "˞":"rhotacized"},
-	"4" : { "̚":"unreleased", "̈":"centralized", "̃":"nasalized", "̥":"voiceless", "̊":"voiceless", "̬":"voiced", "̩":"syllabic", "̝":"raised", "̞":"lowered", "̟":"advanced (fronted)", "̠":"retracted (backed)"},
-	"5" : { "ʼ":"ejective", "̪":"dental", "̺":"apical", "̯":"non-syllabic", "̤":"breathy voiced", "̰":"creaky voiced", "̼":"linguolabial", "̘":"advanced tongue root", "̙":"retracted tongue root", "̻":"laminal", "̹":"more rounded", "̜":"less rounded", "̽":"mid-centralized"},
-	"6" : { "ː":"length mark", "ˑ":"half-long", "̆":"extra short",},
-	"stress" : { "ˈ":"primary stress", "ˌ":"secondary stress",},
-	"group":{ "|":"minor group", "‖":"major group",},
-	"bar"	:{ "͡":"tie bar", "͜":"tie bar", "‿":"linking", "→":"becomes"},
-	"7" : { "̋":"extra high", "́":"high", "̄":"mid", "̀":"low", "̏":"extra low",},
-	"rising": { "̌":"rising", "̂":"falling", "᷄":"high rising", "᷅":"low rising", "᷈":"rising-falling"},
-	"8" : {"˥":"extra high", "˦":"high", "˧":"mid", "˨":"low", "˩":"extra low", "˩˥":"rising (may not work on chrome/safari)", "˥˩":"falling (may not work on chrome/safari)", "˦˥":"high rising (may not work on chrome/safari)", "˩˨":"low rising (may not work on chrome/safari)", "˧˦˧":"rising-falling (may not work on chrome/safari)"},
-	"arrows" : { "↓" : "downstep", "↑" : "upstep", "↗" : "global rise", "↘" : "global fall"}
-      } 
+      [
+	{"*" : { "ʰ":"aspirated", "ʷ":"labialized", "ʲ":"palatalized", "ˠ":"velarized", "ˤ":"pharyngealized", "ⁿ":"nasal release", "ˡ":"lateral release", "ʱ":"breathy-voice aspirated", "ᵊ":"syllabic or schwa", "ʳ":"optional r", "˞":"rhotacized"}},
+	{"#" : { "̚":"unreleased", "̈":"centralized", "̃":"nasalized", "̥":"voiceless", "̊":"voiceless", "̬":"voiced", "̩":"syllabic", "̝":"raised", "̞":"lowered", "̟":"advanced (fronted)", "̠":"retracted (backed)"}},
+	{">" : { "ʼ":"ejective", "̪":"dental", "̺":"apical", "̯":"non-syllabic", "̤":"breathy voiced", "̰":"creaky voiced", "̼":"linguolabial", "̘":"advanced tongue root", "̙":"retracted tongue root", "̻":"laminal", "̹":"more rounded", "̜":"less rounded", "̽":"mid-centralized"}},
+	{"~" : { "ː":"length mark", "ˑ":"half-long", "̆":"extra short",}},
+	{"\'" : { "ˈ":"primary stress", "ˌ":"secondary stress",}},
+	{"|":{ "|":"minor group", "‖":"major group",}},
+	{"["	:{ "͡":"tie bar", "͜":"tie bar", "‿":"linking", "→":"becomes"}},
+	{"7" : { "̋":"extra high", "́":"high", "̄":"mid", "̀":"low", "̏":"extra low",}},
+	{"^": { "̌":"rising", "̂":"falling", "᷄":"high rising", "᷅":"low rising", "᷈":"rising-falling"}},
+	{"]" : {"˥":"extra high", "˦":"high", "˧":"mid", "˨":"low", "˩":"extra low"}}, 
+	{"\\" : {"˩˥":"rising (may not work on chrome/safari)", "˥˩":"falling (may not work on chrome/safari)", "˦˥":"high rising (may not work on chrome/safari)", "˩˨":"low rising (may not work on chrome/safari)", "˧˦˧":"rising-falling (may not work on chrome/safari)"}},
+	{"+" : { "↓" : "downstep", "↑" : "upstep", "↗" : "global rise", "↘" : "global fall"}}
+      ] 
     }
   };
   
 }
-
-function addElement(parentid ) {
-  var ni = document.getElementById('myDiv');
-  var numi = document.getElementById('theValue');
-  var num = (document.getElementById('theValue').value -1)+ 2;
-  numi.value = num;
-  var newdiv = document.createElement('div');
-  var divIdName = 'my'+num+'Div';
-  newdiv.setAttribute('id',divIdName);
-  newdiv.innerHTML = 'Element Number '+num+' has been added! <a href=\'#\' onclick=\'removeElement('+divIdName+')\'>Remove the div "'+divIdName+'"</a>';
-  ni.appendChild(newdiv);
-}
-
 /*
  *The following function is a jQuery plugin
  * Copyright (c) 2010 C. F., Wong (<a href="http://cloudgen.w0ng.hk">Cloudgen Examplet Store</a>)
