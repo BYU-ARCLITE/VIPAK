@@ -4,7 +4,7 @@
 
 #kbpos1{width:39%;}
 
-.kbwpr{max-width:600px; position:relative; display:none;}
+.kbwpr{max-width:600px; position:relative; display:none}
 
 .kbsectitle{background-color:#BEA071;}
 .kblsetitle{background-color:#A80CAF; padding:1px 4px; border-radius:12px;}

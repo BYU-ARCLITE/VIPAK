@@ -52,6 +52,7 @@ listCount = -1, branch;
       } else {
 	listCount = 0;
       }
+      console.log(e.charCode);
       eventKey = e.which;
       if(specialCode[eventKey] != undefined){
 	eventChar = specialCode[eventKey];
