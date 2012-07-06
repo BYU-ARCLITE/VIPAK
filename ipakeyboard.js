@@ -23,66 +23,9 @@ var specialCode = {
   UP: 38
 };
 $(function(){
-  var fct, kb, cS, cE, str, sub1, sub2, isCtrl, eventKey, eventChar,
-listCount = -1, branch;
+  var fct, kb;
   fct = new KeyboardFactory();
   kb = fct.fullkeyboard();
-  $('body').append(kb.html);
-  $('.kbwpr').hide();
-  $('input[type=text],input[type=textbox],textarea').focusin(function(){
-      $(kb.html).slideDown('fast');
-      kb.focusBox = this;
-  });
-  $(kb.html).find('.kbletter').click(function(){
-    cS = $(kb.focusBox).caret().start, cE = $(kb.focusBox).caret().end;
-    str = $(kb.focusBox).attr('value');
-    sub1 = str.substring(0,cS);
-    sub2 = str.substring(cE);
-    $(kb.focusBox).attr('value', sub1 + $(this).attr('letter') + sub2);
-    $(kb.focusBox).focus();
-    cS = cS+$(this).attr('letter').length;
-    cE = cS;
-    $(kb.focusBox).caret(cS,cS);
-  });
-  kb.setHotKeys();
-  /*$('input[type=text],input[type=textbox],textarea').keyup(function(e){
-    if(e.which == 17) {
-      isCtrl = false;
-      listCount = -1;
-      eventKey = null;
-    }
-  }).keydown(function(e){
-    if(e.which == 17){ 
-      isCtrl=true;
-    }
-    if(isCtrl && e.which != 17){
-      if(eventKey == e.which){
-	listCount++;
-      } else {
-	listCount = 0;
-      }
-      eventKey = e.which;
-      if(specialChar[eventKey] != undefined){
-	eventChar = specialChar[eventKey];
-      }
-      eventChar = specialChar[eventKey] != undefined? specialChar[eventKey] : String.fromCharCode(e.which);
-      branch = kb.alphaSet[eventChar];
-      if(branch != undefined){
-	var ltr = kb.alphaSet[eventChar][listCount % branch.length].letter;
-	cS = listCount>0? $(kb.focusBox).caret().start-1:$(kb.focusBox).caret().start;
-	cE = $(kb.focusBox).caret().end;
-	str = $(kb.focusBox).attr('value');
-	sub1 = str.substring(0,cS);
-	sub2 = str.substring(cE);
-	$(kb.focusBox).attr('value', sub1 + ltr + sub2);
-	cE = cE + ltr.length;
-	cS = cE;
-	$(kb.focusBox).caret(cS,cS);
-      }
-    }
-  });*/
-
-  
 });
 function KeyboardFactory(){
   this.fullkeyboard = function(){
@@ -90,36 +33,25 @@ function KeyboardFactory(){
     k = new Keyboard();
     k.dict = k.ipa_full;
     k.organize();
-    
+    document.body.appendChild(k.html);
+    $(k.html).hide();
+    k.setBoxListener();
+    k.setButtonListeners();
+    k.setHotKeys();
     return k;
   };
 }
-function KeySection(){
-  this.title = "";
-  this.keyset = [];
-  this.elmnt = null;
-  this.toString = function(){
-    return this.title;
-  }
-}
-function LetterSet(){
-  this.title = "";
-  this.letterset = [];
-  this.elmnt = null;
-  this.toString = function(){
-    return this.title ;
-  }
-}
-function Letter(){
-  this.letter = "";
-  this.isScript = false;
-  this.title = "";
-  this.elmnt = null;
-  this.toString = function(){
-    return this.letter + ":" + this.title;
-  }
+jQuery.fn.center = function () {
+  this.css("position","absolute");
+  //this.css("top", ( $(window).height() - this.height() ) / 2+$(window).scrollTop() + "px");
+  this.css("left", ( $(window).width() - this.width() ) / 2+$(window).scrollLeft() + "px");
+  return this;
 }
 function Keyboard(){
+  var kb = this, typeModeIcon;
+  var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode = false;
+  typeModeIcon = document.createElement('i');
+  typeModeIcon.setAttribute('class', 'icon icon-leaf kbtyping');
   this.Left = [];
   this.Right = [];
   this.Center = [];
@@ -135,9 +67,13 @@ function Keyboard(){
       return false;
     }
     var location, type, lset, lettr, sectn, lst, let, indx, counter=0;
-    var title1, title2, posel, kgp, tmp;
+    var title1, title2, posel, kgp, tmp, closeIcon;
     this.html = document.createElement('div');
     this.html.setAttribute('class', 'kbwpr');
+    closeIcon = document.createElement('i');
+    closeIcon.setAttribute('class', 'kbclose');
+    closeIcon.innerHTML = '&times;';
+    this.html.appendChild(closeIcon);
     for(location in this.dict){
       posel = document.createElement('span');
       posel.setAttribute('id', 'kbpos'+location);
@@ -201,7 +137,6 @@ function Keyboard(){
       this.html.appendChild(posel);
       this.position.push(posel);
     }
-    
   };
   this.ipa_full = {
     "0"	:
@@ -250,7 +185,7 @@ function Keyboard(){
 	{"\'" : { "ˈ":"primary stress", "ˌ":"secondary stress",}},
 	{"|":{ "|":"minor group", "‖":"major group",}},
 	{"["	:{ "͡":"tie bar", "͜":"tie bar", "‿":"linking", "→":"becomes"}},
-	{"7" : { "̋":"extra high", "́":"high", "̄":"mid", "̀":"low", "̏":"extra low",}},
+	{"\"" : { "̋":"extra high", "́":"high", "̄":"mid", "̀":"low", "̏":"extra low",}},
 	{"^": { "̌":"rising", "̂":"falling", "᷄":"high rising", "᷅":"low rising", "᷈":"rising-falling"}},
 	{"]" : {"˥":"extra high", "˦":"high", "˧":"mid", "˨":"low", "˩":"extra low"}}, 
 	{"\\" : {"˩˥":"rising (may not work on chrome/safari)", "˥˩":"falling (may not work on chrome/safari)", "˦˥":"high rising (may not work on chrome/safari)", "˩˨":"low rising (may not work on chrome/safari)", "˧˦˧":"rising-falling (may not work on chrome/safari)"}},
@@ -269,7 +204,6 @@ function Keyboard(){
     $(this.focusBox).caret(cStart,cStart);
   };
   this.setHotKeys = function(){
-    var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode, kb = this;
     $('input[type=text],input[type=textbox],textarea').keydown(function(e){
       if(e.which == 17){
 	prevMode = specialMode;
@@ -277,18 +211,24 @@ function Keyboard(){
 	delta = null;
 	foxtrot = 0;
 	hotel = 0;
+	$(kb.focusBox).after(typeModeIcon);
       }
       if(e.which == specialCode['ESCAPE']){
 	specialMode = false;
 	delta = null;
 	foxtrot = 0;
 	hotel = 0;
+	$(typeModeIcon).remove();
+      }
+      if(e.ctrlKey){
+	specialMode = prevMode;
+	if(!specialMode){
+	  $(typeModeIcon).remove();
+	}
       }
     });
     $('input[type=text],input[type=textbox],textarea').keypress(function(e){
-      if(e.ctrlKey){
-	specialMode = prevMode;
-      }
+
       if(specialMode && e.which != 17 && e.which != 16 && !e.ctrlKey){
 	alpha = String.fromCharCode(e.keyCode).toLocaleUpperCase();
 	foxtrot = alpha == delta ? foxtrot+1: 0;
@@ -306,10 +246,61 @@ function Keyboard(){
       }
     });
   };
+  this.setButtonListeners = function(){
+    $(this.html).find('.kbletter').click(function(){
+      cS = $(kb.focusBox).caret().start, cE = $(kb.focusBox).caret().end;
+      str = $(kb.focusBox).attr('value');
+      sub1 = str.substring(0,cS);
+      sub2 = str.substring(cE);
+      $(kb.focusBox).attr('value', sub1 + $(this).attr('letter') + sub2);
+      $(kb.focusBox).focus();
+      cS = cS+$(this).attr('letter').length;
+      cE = cS;
+      $(kb.focusBox).caret(cS,cS);
+    });
+  };
+  this.setBoxListener = function(){
+    $('input[type=text],input[type=textbox],textarea').focusin(function(){
+	if(kb.focusBox != this){
+	  $(kb.html).slideDown(300).center();
+	  kb.focusBox = this;
+	  hotel=1;
+	  specialMode = false; 
+	  prevMode = false;
+	  $(typeModeIcon).remove();
+	}
+    });
+    $('.kbclose').click(function(){
+      $(kb.html).slideUp(300);
+    });
+  };
 }
-
-function checkCharWidth(chr)
-{
+function KeySection(){
+  this.title = "";
+  this.keyset = [];
+  this.elmnt = null;
+  this.toString = function(){
+    return this.title;
+  }
+}
+function LetterSet(){
+  this.title = "";
+  this.letterset = [];
+  this.elmnt = null;
+  this.toString = function(){
+    return this.title ;
+  }
+}
+function Letter(){
+  this.letter = "";
+  this.isScript = false;
+  this.title = "";
+  this.elmnt = null;
+  this.toString = function(){
+    return this.letter + ":" + this.title;
+  }
+}
+function checkCharWidth(chr){
   var f = document.createElement('span'), g = 'bkeirbareren143e', h;
   f.setAttribute('id', g); 
   f.innerHTML = chr; 
@@ -319,7 +310,7 @@ function checkCharWidth(chr)
   return h>0 ? false : true;
 }
 /*
- *The following function is a jQuery plugin
+ *
  * Copyright (c) 2010 C. F., Wong (<a href="http://cloudgen.w0ng.hk">Cloudgen Examplet Store</a>)
  * Licensed under the MIT License:
  * http://www.opensource.org/licenses/mit-license.php
