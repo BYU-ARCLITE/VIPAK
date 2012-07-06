@@ -1,21 +1,29 @@
 var specialCode = {
-  8: 'backspace',
-  188:',',
-  46:'del',
-  40:'down',
-  35:'end',
-  13:'enter',
-  27:'esc',
-  36:'home',
-  37:'left',
-  190:'.',
-  39:'right',
-  32:'space',
-  9:'tab',
-  38:'up'
+  BACKSPACE: 8,
+  COMMA: 188,
+  DELETE: 46,
+  DOWN: 40,
+  END: 35,
+  ENTER: 13,
+  ESCAPE: 27,
+  HOME: 36,
+  LEFT: 37,
+  NUMPAD_ADD: 107,
+  NUMPAD_DECIMAL: 110,
+  NUMPAD_DIVIDE: 111,
+  NUMPAD_ENTER: 108,
+  NUMPAD_MULTIPLY: 106,
+  NUMPAD_SUBTRACT: 109,
+  PAGE_DOWN: 34,
+  PAGE_UP: 33,
+  PERIOD: 190,
+  RIGHT: 39,
+  SPACE: 32,
+  TAB: 9,
+  UP: 38
 };
 $(function(){
-  var fct, kb, cS, cE, field, str, sub1, sub2, isCtrl, eventKey, eventChar,
+  var fct, kb, cS, cE, str, sub1, sub2, isCtrl, eventKey, eventChar,
 listCount = -1, branch;
   fct = new KeyboardFactory();
   kb = fct.fullkeyboard();
@@ -23,20 +31,21 @@ listCount = -1, branch;
   $('.kbwpr').hide();
   $('input[type=text],input[type=textbox],textarea').focusin(function(){
       $(kb.html).slideDown('fast');
-      field = $(this);
+      kb.focusBox = this;
   });
   $(kb.html).find('.kbletter').click(function(){
-    cS = field.caret().start, cE = field.caret().end;
-    str = field.attr('value');
+    cS = $(kb.focusBox).caret().start, cE = $(kb.focusBox).caret().end;
+    str = $(kb.focusBox).attr('value');
     sub1 = str.substring(0,cS);
     sub2 = str.substring(cE);
-    field.attr('value', sub1 + $(this).attr('letter') + sub2);
-    field.focus();
+    $(kb.focusBox).attr('value', sub1 + $(this).attr('letter') + sub2);
+    $(kb.focusBox).focus();
     cS = cS+$(this).attr('letter').length;
     cE = cS;
-    field.caret(cS,cS);
+    $(kb.focusBox).caret(cS,cS);
   });
-  $('input[type=text],input[type=textbox],textarea').keyup(function(e){
+  kb.setHotKeys();
+  /*$('input[type=text],input[type=textbox],textarea').keyup(function(e){
     if(e.which == 17) {
       isCtrl = false;
       listCount = -1;
@@ -53,26 +62,26 @@ listCount = -1, branch;
 	listCount = 0;
       }
       eventKey = e.which;
-      if(specialCode[eventKey] != undefined){
-	eventChar = specialCode[eventKey];
+      if(specialChar[eventKey] != undefined){
+	eventChar = specialChar[eventKey];
       }
-      eventChar = specialCode[eventKey] != undefined? specialCode[eventKey] : String.fromCharCode(e.which);
+      eventChar = specialChar[eventKey] != undefined? specialChar[eventKey] : String.fromCharCode(e.which);
       branch = kb.alphaSet[eventChar];
       if(branch != undefined){
 	var ltr = kb.alphaSet[eventChar][listCount % branch.length].letter;
-	cS = listCount>0? field.caret().start-1:field.caret().start;
-	cE = field.caret().end;
-	str = field.attr('value');
+	cS = listCount>0? $(kb.focusBox).caret().start-1:$(kb.focusBox).caret().start;
+	cE = $(kb.focusBox).caret().end;
+	str = $(kb.focusBox).attr('value');
 	sub1 = str.substring(0,cS);
 	sub2 = str.substring(cE);
-	field.attr('value', sub1 + ltr + sub2);
-	field.focus();
+	$(kb.focusBox).attr('value', sub1 + ltr + sub2);
 	cE = cE + ltr.length;
 	cS = cE;
-	field.caret(cS,cS);
+	$(kb.focusBox).caret(cS,cS);
       }
     }
-  });
+  });*/
+
   
 });
 function KeyboardFactory(){
@@ -119,6 +128,7 @@ function Keyboard(){
   this.dict = null;
   this.focusBox = null;
   this.alphaSet = [];
+  this.focusbox = null;
   this.organize = function(){
     if(this.dict == null)
     {
@@ -247,6 +257,54 @@ function Keyboard(){
 	{"+" : { "↓" : "downstep", "↑" : "upstep", "↗" : "global rise", "↘" : "global fall"}}
       ] 
     }
+  };
+  this.writeToBox = function(chr, replaceLength){
+    var cStart, cEnd, str, output;
+    cStart = $(this.focusBox).caret().start - replaceLength;
+    cEnd = $(this.focusBox).caret().end;
+    str = $(this.focusBox).attr('value');
+    out = str.substring(0,cStart) + chr + str.substring(cEnd);
+    $(this.focusBox).attr('value', out);
+    cStart = cEnd + chr.length;
+    $(this.focusBox).caret(cStart,cStart);
+  };
+  this.setHotKeys = function(){
+    var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode, kb = this;
+    $('input[type=text],input[type=textbox],textarea').keydown(function(e){
+      if(e.which == 17){
+	prevMode = specialMode;
+	specialMode=true;
+	delta = null;
+	foxtrot = 0;
+	hotel = 0;
+      }
+      if(e.which == specialCode['ESCAPE']){
+	specialMode = false;
+	delta = null;
+	foxtrot = 0;
+	hotel = 0;
+      }
+    });
+    $('input[type=text],input[type=textbox],textarea').keypress(function(e){
+      if(e.ctrlKey){
+	specialMode = prevMode;
+      }
+      if(specialMode && e.which != 17 && e.which != 16 && !e.ctrlKey){
+	alpha = String.fromCharCode(e.keyCode).toLocaleUpperCase();
+	foxtrot = alpha == delta ? foxtrot+1: 0;
+	if(foxtrot==0){
+	  hotel=0;
+	}
+	delta = alpha;
+	beta = kb.alphaSet[alpha];
+	if(beta != undefined){
+	  gamma = beta[foxtrot % beta.length].letter;
+	  e.preventDefault();
+	  kb.writeToBox(gamma, hotel);
+	  hotel = gamma.length;
+	}
+      }
+    });
   };
 }
 
