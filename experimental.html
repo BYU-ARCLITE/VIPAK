@@ -7,9 +7,16 @@
 		<meta http-equiv="Content-Type" content="text/html;" charset="UTF-8" />
 		<link href="bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" />
 		<link href="ipakeyboard.css" rel="stylesheet" type="text/css" />
+		<script>
+		$(function(){
+		  var kb = new Keyboard();
+		  kb.fullIPADriver();
+		  
+		});
+		</script>
 	</head>
 	<body>
-		<textarea id="fulltext"></textarea>
+		<textarea class="keyboardEnabled" id="fulltext"></textarea>
 		<br />
 		<input type='text' >
 		<br />
