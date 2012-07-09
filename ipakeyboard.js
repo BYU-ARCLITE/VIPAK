@@ -19,28 +19,11 @@ var specialCode = {
   PERIOD: 190,
   RIGHT: 39,
   SPACE: 32,
+  SHIFT: 16,
   TAB: 9,
   UP: 38
 };
-$(function(){
-  var fct, kb;
-  fct = new KeyboardFactory();
-  kb = fct.fullkeyboard();
-});
-function KeyboardFactory(){
-  this.fullkeyboard = function(){
-    var k;
-    k = new Keyboard();
-    k.dict = k.ipa_full;
-    k.organize();
-    document.body.appendChild(k.html);
-    $(k.html).hide();
-    k.setBoxListener();
-    k.setButtonListeners();
-    k.setHotKeys();
-    return k;
-  };
-}
+
 jQuery.fn.center = function () {
   this.css("position","absolute");
   //this.css("top", ( $(window).height() - this.height() ) / 2+$(window).scrollTop() + "px");
@@ -48,7 +31,7 @@ jQuery.fn.center = function () {
   return this;
 }
 function Keyboard(){
-  var kb = this, typeModeIcon;
+  var kb = this, typeModeIcon, isVisible=false;
   var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode = false;
   typeModeIcon = document.createElement('i');
   typeModeIcon.setAttribute('class', 'icon icon-leaf kbtyping');
@@ -57,28 +40,41 @@ function Keyboard(){
   this.Center = [];
   this.position = [];
   this.parentId = null;
-  this.dict = null;
   this.focusBox = null;
   this.alphaSet = [];
   this.focusbox = null;
-  this.organize = function(){
-    if(this.dict == null)
+  this.fullIPADriver = function(){
+    this.organize(this.ipa_full);
+    document.body.appendChild(this.html);
+    $(this.html).hide();
+    this.setBoxListener();
+    this.setButtonListeners();
+    this.setHotKeys();
+  }
+  this.organize = function(dict){
+    if(dict == null)
     {
       return false;
     }
     var location, type, lset, lettr, sectn, lst, let, indx, counter=0;
-    var title1, title2, posel, kgp, tmp, closeIcon;
+    var title1, title2, posel, kgp, tmp, closeIcon, helpIcon;
     this.html = document.createElement('div');
     this.html.setAttribute('class', 'kbwpr');
     closeIcon = document.createElement('i');
     closeIcon.setAttribute('class', 'kbclose');
+    closeIcon.setAttribute('title', 'close VIPAK');
     closeIcon.innerHTML = '&times;';
+    helpIcon = document.createElement('i');
+    helpIcon.setAttribute('class', 'kbhelp');
+    helpIcon.setAttribute('title', 'about VIPAK');
+    helpIcon.innerHTML = '?';
+    this.html.appendChild(helpIcon);
     this.html.appendChild(closeIcon);
-    for(location in this.dict){
+    for(location in dict){
       posel = document.createElement('span');
       posel.setAttribute('id', 'kbpos'+location);
       
-      for(type in this.dict[location]){
+      for(type in dict[location]){
 	
 	sectn = new KeySection();
 	sectn.title = type;
@@ -88,8 +84,8 @@ function Keyboard(){
 	title1.setAttribute('class', 'label kbsectitle');
 	title1.innerHTML = sectn.title;
 	sectn.elmnt.appendChild(title1);
-	for(indx in this.dict[location][type]){
-	  for(lset in this.dict[location][type][indx]){
+	for(indx in dict[location][type]){
+	  for(lset in dict[location][type][indx]){
 	    lst = new LetterSet();
 	    lst.title = lset;
 	    lst.elmnt = document.createElement('span');
@@ -101,11 +97,11 @@ function Keyboard(){
 	    lst.elmnt.appendChild(title2);
 	    kgp = document.createElement('span');
 	    kgp.setAttribute('class', 'kbtng btn-group');
-	    for(lettr in this.dict[location][type][indx][lset]){
+	    for(lettr in dict[location][type][indx][lset]){
 	      let = new Letter();
 	      let.letter = lettr;
 	      let.isScript = checkCharWidth(lettr);
-	      let.title = this.dict[location][type][indx][lset][lettr];
+	      let.title = dict[location][type][indx][lset][lettr];
 	      let.elmnt = document.createElement('button');
 	      let.elmnt.setAttribute('class', 'kbletter btn');
 	      let.elmnt.setAttribute('id', 'kbl'+let.letter);
@@ -204,47 +200,49 @@ function Keyboard(){
     $(this.focusBox).caret(cStart,cStart);
   };
   this.setHotKeys = function(){
-    $('input[type=text],input[type=textbox],textarea').keydown(function(e){
-      if(e.which == 17){
-	prevMode = specialMode;
-	specialMode=true;
-	delta = null;
-	foxtrot = 0;
-	hotel = 0;
-	$(kb.focusBox).after(typeModeIcon);
-      }
-      if(e.which == specialCode['ESCAPE']){
-	specialMode = false;
-	delta = null;
-	foxtrot = 0;
-	hotel = 0;
-	$(typeModeIcon).remove();
-      }
-      if(e.ctrlKey){
-	specialMode = prevMode;
-	if(!specialMode){
+    document.onkeydown = function(e){
+      if(e.target == kb.focusBox){
+	if(e.which == 17 && specialMode){
+	  console.log('newchar');
+	  delta = null;
+	  foxtrot = 0;
+	  hotel = 0;
+	}
+	if(e.which == specialCode['ESCAPE']){
+	  specialMode = false;
+	  delta = null;
+	  foxtrot = 0;
+	  hotel = 0;
 	  $(typeModeIcon).remove();
 	}
-      }
-    });
-    $('input[type=text],input[type=textbox],textarea').keypress(function(e){
-
-      if(specialMode && e.which != 17 && e.which != 16 && !e.ctrlKey){
-	alpha = String.fromCharCode(e.keyCode).toLocaleUpperCase();
-	foxtrot = alpha == delta ? foxtrot+1: 0;
-	if(foxtrot==0){
-	  hotel=0;
-	}
-	delta = alpha;
-	beta = kb.alphaSet[alpha];
-	if(beta != undefined){
-	  gamma = beta[foxtrot % beta.length].letter;
-	  e.preventDefault();
-	  kb.writeToBox(gamma, hotel);
-	  hotel = gamma.length;
+	if(e.ctrlKey && e.which == specialCode['SHIFT']){
+	  specialMode=true;
+	  delta = null;
+	  foxtrot = 0;
+	  hotel = 0;
+	  $(kb.focusBox).after(typeModeIcon);
 	}
       }
-    });
+    }
+    document.onkeypress = function(e){
+      if(e.target == kb.focusBox){
+	if(specialMode && e.which != 17 && e.which != 16 && !e.ctrlKey){
+	  alpha = String.fromCharCode(e.charCode).toLocaleUpperCase();
+	  foxtrot = alpha == delta ? foxtrot+1: 0;
+	  if(foxtrot==0){
+	    hotel=0;
+	  }
+	  delta = alpha;
+	  beta = kb.alphaSet[alpha];
+	  if(beta != undefined){
+	    gamma = beta[foxtrot % beta.length].letter;
+	    e.preventDefault();
+	    kb.writeToBox(gamma, hotel);
+	    hotel = gamma.length;
+	  }
+	}
+      }
+    };
   };
   this.setButtonListeners = function(){
     $(this.html).find('.kbletter').click(function(){
@@ -260,20 +258,29 @@ function Keyboard(){
     });
   };
   this.setBoxListener = function(){
-    $('input[type=text],input[type=textbox],textarea').focusin(function(){
-	if(kb.focusBox != this){
+    $('.keyboardEnabled').focusin(function(){
+	if(kb.focusBox != this || !isVisible){
 	  $(kb.html).slideDown(300).center();
 	  kb.focusBox = this;
 	  hotel=1;
 	  specialMode = false; 
 	  prevMode = false;
 	  $(typeModeIcon).remove();
+	  isVisible = true;
 	}
+    });
+    $('.keyboardEnabled').focusout(function(e){
+      console.log(e);
     });
     $('.kbclose').click(function(){
       $(kb.html).slideUp(300);
+      isVisible = false;
+    });
+    $(window).resize(function(){
+      $(kb.html).center();
     });
   };
+
 }
 function KeySection(){
   this.title = "";
@@ -309,6 +316,7 @@ function checkCharWidth(chr){
   document.body.removeChild(f);
   return h>0 ? false : true;
 }
+
 /*
  *
  * Copyright (c) 2010 C. F., Wong (<a href="http://cloudgen.w0ng.hk">Cloudgen Examplet Store</a>)
