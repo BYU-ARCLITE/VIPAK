@@ -1,38 +1,93 @@
-var specialCode = {
-  BACKSPACE: 8,
-  COMMA: 188,
-  DELETE: 46,
-  DOWN: 40,
-  END: 35,
-  ENTER: 13,
-  ESCAPE: 27,
-  HOME: 36,
-  LEFT: 37,
-  NUMPAD_ADD: 107,
-  NUMPAD_DECIMAL: 110,
-  NUMPAD_DIVIDE: 111,
-  NUMPAD_ENTER: 108,
-  NUMPAD_MULTIPLY: 106,
-  NUMPAD_SUBTRACT: 109,
-  PAGE_DOWN: 34,
-  PAGE_UP: 33,
-  PERIOD: 190,
-  RIGHT: 39,
-  SPACE: 32,
-  SHIFT: 16,
-  TAB: 9,
-  UP: 38
-};
+jQuery.fn.exists = function(){return this.length>0;}
+
+function dig(blob, depth){
+  depth = depth || 0;
+  var deepest = 0;
+  var item = blob != null && typeof blob == 'object' ? Object.keys(blob)[0]:null;
+  console.log(item);
+  return item !=null? (typeof blob[item] === 'object' ? dig(blob[item], depth + 1) : depth + 1): depth;
+  if( typeof blob[item] === 'object' ) {
+    return dig( blob[item], depth+1); // descend
+  } else { // simple value, leaf
+    return depth + 1;
+  }
+}
+/*
+* useVipak(boxSelector) or useVipak(boxselector, dict) or useVipak(dict)
+* if kbtype is omitted, dict must have the following build: {num:{area[{set:{letter:description}}]}}
+* 
+*/
+function useVipak(arg1, arg2){
+  var d = null, k=null, b=null;
+  if (arg2 != undefined){
+    
+    d = arg2;
+    b = arg1;
+    if(typeof arg1 == "string" && typeof arg2 == "string"){
+      k = 2;
+      d = new Object();
+      for(var l in arg2){
+	d[arg2[l]] = null;
+      }
+    }else{
+      var i = dig(d);
+      k = i>3?0:(i>1 ? 1:2);
+    }
+  }else if(typeof arg1 === 'object'){
+    d = arg1;
+    var i = dig(d);
+    k = i>3?0:(i>1 ? 1:2);
+    
+  }else if(typeof arg1 === 'string' ){
+    if($(arg1).exists()){
+      b = arg1;
+    }
+    else{
+      k = 2;
+      d = new Object();
+      for(var l in arg1){
+	d[arg1[l]] = null;
+      }
+    }
+  }
+  var kb = new Keyboard();
+  kb.driver(d,k,b);
+}
+
 
 jQuery.fn.center = function () {
-  this.css("position","absolute");
-  //this.css("top", ( $(window).height() - this.height() ) / 2+$(window).scrollTop() + "px");
+  this.css("position","fixed");
   this.css("left", ( $(window).width() - this.width() ) / 2+$(window).scrollLeft() + "px");
   return this;
 }
 function Keyboard(){
   var kb = this, typeModeIcon, isVisible=false;
-  var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode = false;
+  var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode = false, 
+  _specialCode = {
+    BACKSPACE: 8,
+    COMMA: 188,
+    DELETE: 46,
+    DOWN: 40,
+    END: 35,
+    ENTER: 13,
+    ESCAPE: 27,
+    HOME: 36,
+    LEFT: 37,
+    NUMPAD_ADD: 107,
+    NUMPAD_DECIMAL: 110,
+    NUMPAD_DIVIDE: 111,
+    NUMPAD_ENTER: 108,
+    NUMPAD_MULTIPLY: 106,
+    NUMPAD_SUBTRACT: 109,
+    PAGE_DOWN: 34,
+    PAGE_UP: 33,
+    PERIOD: 190,
+    RIGHT: 39,
+    SPACE: 32,
+    SHIFT: 16,
+    TAB: 9,
+    UP: 38
+  };
   typeModeIcon = document.createElement('i');
   typeModeIcon.setAttribute('class', 'icon icon-leaf kbtyping');
   this.Left = [];
@@ -43,95 +98,133 @@ function Keyboard(){
   this.focusBox = null;
   this.alphaSet = [];
   this.focusbox = null;
-  this.fullIPADriver = function(){
-    this.organize(this.ipa_full);
+
+  this.driver = function(dict, kbtype, boxSelector){
+    
+    this.organize(dict, kbtype);
     document.body.appendChild(this.html);
     $(this.html).hide();
-    this.setBoxListener();
+    this.setBoxListener(boxSelector);
     this.setButtonListeners();
     this.setHotKeys();
-  }
-  this.organize = function(dict){
-    if(dict == null)
+  };
+  this.normalKeyboard = function(dict){
+    
+    this.driver();
+  };
+  this.smallKeyboard = function(dict){
+    this.organize(dict, 0);
+    this.driver();
+  };
+  this.organize = function(dict, kbtype){
+    if(dict == null || dict == undefined)
     {
-      return false;
+      dict = this.ipa_full;
+      kbtype = 0;
     }
-    var location, type, lset, lettr, sectn, lst, let, indx, counter=0;
-    var title1, title2, posel, kgp, tmp, closeIcon, helpIcon;
+    if(kbtype == null){
+      kbtype = 0;
+    }
+    var location, type, lset, lettr, sectn, lst, let, indx, title1, title2, posel, kgp, tmp, closeIcon, helpIcon, kbtoolbar;
     this.html = document.createElement('div');
     this.html.setAttribute('class', 'kbwpr');
+    this.html.tabIndex = 1;
+    kbtoolbar = document.createElement('div');
+    kbtoolbar.setAttribute('class', 'kbtoolbar');
+    kbtoolbar.innerHTML = 'VIPAK&nbsp;';
     closeIcon = document.createElement('i');
     closeIcon.setAttribute('class', 'kbclose');
     closeIcon.setAttribute('title', 'close VIPAK');
     closeIcon.innerHTML = '&times;';
     helpIcon = document.createElement('i');
     helpIcon.setAttribute('class', 'kbhelp');
-    helpIcon.setAttribute('title', 'about VIPAK');
+    helpIcon.setAttribute('title', 'about VIPAK~\n Hotkeys - (focused in text box)\n  Activate: Ctrl+Shift\n  Deactivate: Esc');
     helpIcon.innerHTML = '?';
-    this.html.appendChild(helpIcon);
-    this.html.appendChild(closeIcon);
-    for(location in dict){
-      posel = document.createElement('span');
-      posel.setAttribute('id', 'kbpos'+location);
-      
-      for(type in dict[location]){
+    kbtoolbar.appendChild(helpIcon);
+    kbtoolbar.appendChild(closeIcon);
+    this.html.appendChild(kbtoolbar);
+    if(kbtype == 0){
+      for(location in dict){
+	posel = document.createElement('span');
+	posel.setAttribute('id', 'kbpos'+location);
 	
-	sectn = new KeySection();
-	sectn.title = type;
-	sectn.elmnt = document.createElement('div');
-	sectn.elmnt.setAttribute('class', 'kbsection');
+	for(type in dict[location]){
+	  createKeySection(type);
+	  for(indx in dict[location][type]){
+	    for(lset in dict[location][type][indx]){
+	      createLetterSet(dict[location][type][indx][lset]);
+	    }
+	    if(location=="0"){
+	      this.Left.push(sectn);
+	    }
+	    if(location=="1"){
+	      this.Right.push(sectn);
+	    }
+	    if(location=="2"){
+	      this.Center.push(sectn);
+	    }
+	    posel.appendChild(sectn.elmnt);
+	  }
+	}
+	this.html.appendChild(posel);
+	this.position.push(posel);
+      }
+    }
+    if(kbtype == 1){
+      createKeySection();
+      for(lset in dict){
+	createLetterSet(dict[lset]);
+      }
+      this.html.appendChild(sectn.elmnt);
+    }
+    if(kbtype == 2){
+      lset = "~";
+      createKeySection();
+      createLetterSet(dict);
+      this.html.appendChild(sectn.elmnt);
+    }
+    function createKeySection(typ){
+      sectn = new KeySection();
+      sectn.title = typ;
+      sectn.elmnt = document.createElement('div');
+      sectn.elmnt.setAttribute('class', 'kbsection');
+      if(typ != null){
 	title1 = document.createElement('div');
 	title1.setAttribute('class', 'label kbsectitle');
 	title1.innerHTML = sectn.title;
 	sectn.elmnt.appendChild(title1);
-	for(indx in dict[location][type]){
-	  for(lset in dict[location][type][indx]){
-	    lst = new LetterSet();
-	    lst.title = lset;
-	    lst.elmnt = document.createElement('span');
-	    lst.elmnt.setAttribute('class', 'kblset label');
-	    lst.elmnt.setAttribute('id', lst.title);
-	    title2 = document.createElement('span');
-	    title2.setAttribute('class', 'kblsetitle badge');
-	    title2.innerHTML = lst.title;
-	    lst.elmnt.appendChild(title2);
-	    kgp = document.createElement('span');
-	    kgp.setAttribute('class', 'kbtng btn-group');
-	    for(lettr in dict[location][type][indx][lset]){
-	      let = new Letter();
-	      let.letter = lettr;
-	      let.isScript = checkCharWidth(lettr);
-	      let.title = dict[location][type][indx][lset][lettr];
-	      let.elmnt = document.createElement('button');
-	      let.elmnt.setAttribute('class', 'kbletter btn');
-	      let.elmnt.setAttribute('id', 'kbl'+let.letter);
-	      let.elmnt.setAttribute('title', let.title);
-	      let.elmnt.setAttribute('letter', let.letter);
-	      let.elmnt.innerHTML = (let.isScript? '&nbsp;':'')+let.letter;
-	      lst.letterset.push(let);
-	      kgp.appendChild(let.elmnt);
-	      
-	    }
-	    counter=counter+1;
-	    lst.elmnt.appendChild(kgp);
-	    this.alphaSet[lst.title] = lst.letterset;
-	    sectn.keyset.push(lst);
-	    sectn.elmnt.appendChild(lst.elmnt);
-	  }
-	  if(location=="0"){
-	    this.Left.push(sectn);
-	  }
-	  if(location=="1"){
-	    this.Right.push(sectn);
-	  }
-	  if(location=="2"){
-	    this.Center.push(sectn);
-	  }
-	  posel.appendChild(sectn.elmnt);
-	}
       }
-      this.html.appendChild(posel);
-      this.position.push(posel);
+    }
+    function createLetterSet(dictref){
+      lst = new LetterSet();
+      lst.title = lset;
+      lst.elmnt = document.createElement('span');
+      lst.elmnt.setAttribute('class', 'kblset label');
+      lst.elmnt.setAttribute('id', lst.title);
+      title2 = document.createElement('span');
+      title2.setAttribute('class', 'kblsetitle badge');
+      title2.innerHTML = lst.title;
+      lst.elmnt.appendChild(title2);
+      kgp = document.createElement('span');
+      kgp.setAttribute('class', 'kbtng btn-group');
+      for(lettr in dictref){
+	let = new Letter();
+	let.letter = lettr;
+	let.isScript = checkCharWidth(lettr);
+	let.title = dictref[lettr] != undefined ? dictref[lettr]:'';
+	let.elmnt = document.createElement('button');
+	let.elmnt.setAttribute('class', 'kbletter btn');
+	let.elmnt.setAttribute('id', 'kbl'+let.letter);
+	let.elmnt.setAttribute('title', let.title);
+	let.elmnt.setAttribute('letter', let.letter);
+	let.elmnt.innerHTML = (let.isScript? '&nbsp;':'')+let.letter;
+	lst.letterset.push(let);
+	kgp.appendChild(let.elmnt);
+      }
+      lst.elmnt.appendChild(kgp);
+      kb.alphaSet[lst.title] = lst.letterset;
+      sectn.keyset.push(lst);
+      sectn.elmnt.appendChild(lst.elmnt);
     }
   };
   this.ipa_full = {
@@ -174,13 +267,16 @@ function Keyboard(){
     {
       "diacritics"	:
       [
-	{"*" : { "ʰ":"aspirated", "ʷ":"labialized", "ʲ":"palatalized", "ˠ":"velarized", "ˤ":"pharyngealized", "ⁿ":"nasal release", "ˡ":"lateral release", "ʱ":"breathy-voice aspirated", "ᵊ":"syllabic or schwa", "ʳ":"optional r", "˞":"rhotacized"}},
-	{"#" : { "̚":"unreleased", "̈":"centralized", "̃":"nasalized", "̥":"voiceless", "̊":"voiceless", "̬":"voiced", "̩":"syllabic", "̝":"raised", "̞":"lowered", "̟":"advanced (fronted)", "̠":"retracted (backed)"}},
-	{">" : { "ʼ":"ejective", "̪":"dental", "̺":"apical", "̯":"non-syllabic", "̤":"breathy voiced", "̰":"creaky voiced", "̼":"linguolabial", "̘":"advanced tongue root", "̙":"retracted tongue root", "̻":"laminal", "̹":"more rounded", "̜":"less rounded", "̽":"mid-centralized"}},
-	{"~" : { "ː":"length mark", "ˑ":"half-long", "̆":"extra short",}},
+	{"~" : { "ʰ":"aspirated", "ʷ":"labialized", "ʲ":"palatalized", "ˠ":"velarized", "ˤ":"pharyngealized"}},
+	{"*"  : {"ⁿ":"nasal release", "ˡ":"lateral release", "ʱ":"breathy-voice aspirated", "ᵊ":"syllabic or schwa", "ʳ":"optional r", "˞":"rhotacized"}},
+	{"#" : { "̚":"unreleased", "̈":"centralized", "̃":"nasalized", "̥":"voiceless", "̊":"voiceless"}}, 
+	{"@" : {"̬":"voiced", "̩":"syllabic", "̝":"raised", "̞":"lowered", "̟":"advanced (fronted)", "̠":"retracted (backed)"}},
+	{"<" : { "ʼ":"ejective", "̪":"dental", "̺":"apical", "̯":"non-syllabic", "̤":"breathy voiced", "̰":"creaky voiced"}}, 
+	{">"  : {"̼":"linguolabial", "̘":"advanced tongue root", "̙":"retracted tongue root", "̻":"laminal", "̹":"more rounded", "̜":"less rounded", "̽":"mid-centralized"}},
+	{":" : { "ː":"length mark", "ˑ":"half-long", "̆":"extra short",}},
 	{"\'" : { "ˈ":"primary stress", "ˌ":"secondary stress",}},
 	{"|":{ "|":"minor group", "‖":"major group",}},
-	{"["	:{ "͡":"tie bar", "͜":"tie bar", "‿":"linking", "→":"becomes"}},
+	{"-"	:{ "͡":"tie bar", "͜":"tie bar", "‿":"linking", "→":"becomes"}},
 	{"\"" : { "̋":"extra high", "́":"high", "̄":"mid", "̀":"low", "̏":"extra low",}},
 	{"^": { "̌":"rising", "̂":"falling", "᷄":"high rising", "᷅":"low rising", "᷈":"rising-falling"}},
 	{"]" : {"˥":"extra high", "˦":"high", "˧":"mid", "˨":"low", "˩":"extra low"}}, 
@@ -201,31 +297,46 @@ function Keyboard(){
   };
   this.setHotKeys = function(){
     document.onkeydown = function(e){
-      if(e.target == kb.focusBox){
-	if(e.which == 17 && specialMode){
-	  console.log('newchar');
+      if (e == null) 
+        e = window.event;
+      var target = e.target != null ? e.target : e.srcElement;
+      if(target == kb.html){
+	
+	if(e.keyCode == _specialCode['ESCAPE']){
+	  $('.kbclose').trigger('click');
+	}
+      }
+      if(target == kb.focusBox){
+	if(e.keyCode == 17 && specialMode){
+	  
 	  delta = null;
 	  foxtrot = 0;
 	  hotel = 0;
 	}
-	if(e.which == specialCode['ESCAPE']){
+	if(e.keyCode == _specialCode['ESCAPE']){
 	  specialMode = false;
 	  delta = null;
 	  foxtrot = 0;
 	  hotel = 0;
 	  $(typeModeIcon).remove();
 	}
-	if(e.ctrlKey && e.which == specialCode['SHIFT']){
+	if(e.ctrlKey && e.keyCode == _specialCode['SHIFT']){
 	  specialMode=true;
 	  delta = null;
 	  foxtrot = 0;
 	  hotel = 0;
 	  $(kb.focusBox).after(typeModeIcon);
 	}
+	if(e.ctrlKey && e.keyCode == _specialCode['ESCAPE']){
+	  $('.kbclose').trigger('click');
+	}
       }
     }
     document.onkeypress = function(e){
-      if(e.target == kb.focusBox){
+      if (e == null) 
+        e = window.event;
+      var target = e.target != null ? e.target : e.srcElement;
+      if(target == kb.focusBox){
 	if(specialMode && e.which != 17 && e.which != 16 && !e.ctrlKey){
 	  alpha = String.fromCharCode(e.charCode).toLocaleUpperCase();
 	  foxtrot = alpha == delta ? foxtrot+1: 0;
@@ -257,8 +368,9 @@ function Keyboard(){
       $(kb.focusBox).caret(cS,cS);
     });
   };
-  this.setBoxListener = function(){
-    $('.keyboardEnabled').focusin(function(){
+  this.setBoxListener = function(cls){
+    
+    $(((cls==null || cls.length == 0)?'textarea, input[type=text],input[type=textbox]':cls)).focusin(function(){
 	if(kb.focusBox != this || !isVisible){
 	  $(kb.html).slideDown(300).center();
 	  kb.focusBox = this;
@@ -269,13 +381,31 @@ function Keyboard(){
 	  isVisible = true;
 	}
     });
-    $('.keyboardEnabled').focusout(function(e){
-      console.log(e);
-    });
+    if(typeof cls!='string'){
+      $(cls).each(function(){
+	
+	$(':not('+this+')').focusin(function(){
+	  
+	  if(isVisible){
+	    $('.kbclose').toggle('click');
+	  }
+	});
+      });
+    }else{
+      $(':not('+cls+')').focusin(function(){
+	if(isVisible){
+	  $('.kbclose').toggle('click');
+	}
+      });
+    }
+    
+    
     $('.kbclose').click(function(){
+      kb.focusBox = null;
       $(kb.html).slideUp(300);
       isVisible = false;
     });
+    
     $(window).resize(function(){
       $(kb.html).center();
     });
@@ -308,7 +438,7 @@ function Letter(){
   }
 }
 function checkCharWidth(chr){
-  var f = document.createElement('span'), g = 'bkeirbareren143e', h;
+  var f = document.createElement('span'), g = 'kb13', h;
   f.setAttribute('id', g); 
   f.innerHTML = chr; 
   document.body.appendChild(f);
@@ -327,3 +457,4 @@ function checkCharWidth(chr){
 ﻿(function(k,e,i,j){k.fn.caret=function(b,l){var a,c,f=this[0],d=k.browser.msie;if(typeof b==="object"&&typeof b.start==="number"&&typeof b.end==="number"){a=b.start;c=b.end}else if(typeof b==="number"&&typeof l==="number"){a=b;c=l}else if(typeof b==="string")if((a=f.value.indexOf(b))>-1)c=a+b[e];else a=null;else if(Object.prototype.toString.call(b)==="[object RegExp]"){b=b.exec(f.value);if(b!=null){a=b.index;c=a+b[0][e]}}if(typeof a!="undefined"){if(d){d=this[0].createTextRange();d.collapse(true);
 d.moveStart("character",a);d.moveEnd("character",c-a);d.select()}else{this[0].selectionStart=a;this[0].selectionEnd=c}this[0].focus();return this}else{if(d){c=document.selection;if(this[0].tagName.toLowerCase()!="textarea"){d=this.val();a=c[i]()[j]();a.moveEnd("character",d[e]);var g=a.text==""?d[e]:d.lastIndexOf(a.text);a=c[i]()[j]();a.moveStart("character",-d[e]);var h=a.text[e]}else{a=c[i]();c=a[j]();c.moveToElementText(this[0]);c.setEndPoint("EndToEnd",a);g=c.text[e]-a.text[e];h=g+a.text[e]}}else{g=
 f.selectionStart;h=f.selectionEnd}a=f.value.substring(g,h);return{start:g,end:h,text:a,replace:function(m){return f.value.substring(0,g)+m+f.value.substring(h,f.value[e])}}}}})(jQuery,"length","createRange","duplicate");
+
