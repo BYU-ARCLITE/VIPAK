@@ -1,10 +1,9 @@
 jQuery.fn.exists = function(){return this.length>0;}
-
 function dig(blob, depth){
   depth = depth || 0;
   var deepest = 0;
   var item = blob != null && typeof blob == 'object' ? Object.keys(blob)[0]:null;
-  console.log(item);
+  
   return item !=null? (typeof blob[item] === 'object' ? dig(blob[item], depth + 1) : depth + 1): depth;
   if( typeof blob[item] === 'object' ) {
     return dig( blob[item], depth+1); // descend
@@ -54,16 +53,15 @@ function useVipak(arg1, arg2){
   kb.driver(d,k,b);
 }
 
-
 jQuery.fn.bottomCenter = function () {
   this.css("position","fixed");
   this.css("top", Math.max(0, (($(window).height() - this.outerHeight()))) + "px");
-  console.log($(window).scrollTop());
+  
   this.css("left", ( $(window).width() - this.width() ) / 2 + "px");
   return this;
 }
 function Keyboard(){
-  var kb = this, typeModeIcon, isVisible=false, isDragging = false;
+  var kb = this, typeModeIcon, isVisible=false, isDragging = false, closeIcon, isDragged;
   var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode = false, kbtoolbar, 
   _specialCode = {
     BACKSPACE: 8,
@@ -95,8 +93,11 @@ function Keyboard(){
   var _offsetX = 0;           // current element offset
   var _offsetY = 0;
   var _oldZIndex = 0;         // we temporarily increase the z-index during drag
-  typeModeIcon = document.createElement('i');
-  typeModeIcon.setAttribute('class', 'icon icon-leaf kbtyping');
+  typeModeIcon = document.createElement('canvas');
+  typeModeIcon.setAttribute('class', 'kbtyping');
+  typeModeIcon.setAttribute('width', '24');
+  typeModeIcon.setAttribute('height', '24');
+  drawHoshi(typeModeIcon.getContext('2d'));
   this.Left = [];
   this.Right = [];
   this.Center = [];
@@ -105,7 +106,6 @@ function Keyboard(){
   this.focusBox = null;
   this.alphaSet = [];
   this.focusbox = null;
-
   this.driver = function(dict, kbtype, boxSelector){
     
     this.organize(dict, kbtype);
@@ -126,7 +126,7 @@ function Keyboard(){
     if(kbtype == null){
       kbtype = 0;
     }
-    var location, type, lset, lettr, sectn, lst, let, indx, title1, title2, posel, kgp, tmp, closeIcon, helpIcon, kbtoolbarbuttons;
+    var location, type, lset, lettr, sectn, lst, let, indx, title1, title2, posel, kgp, tmp, helpIcon, kbtoolbarbuttons;
     this.html = document.createElement('div');
     this.html.setAttribute('class', 'kb-wrapper');
     this.html.tabIndex = 1;
@@ -151,7 +151,6 @@ function Keyboard(){
       for(location in dict){
 	posel = document.createElement('span');
 	posel.setAttribute('id', 'kb-'+(location==0?'left':(location==1?'right':'center')));
-	
 	for(type in dict[location]){
 	  createKeySection(type);
 	  for(indx in dict[location][type]){
@@ -194,7 +193,7 @@ function Keyboard(){
       sectn.elmnt.setAttribute('class', 'kb-section');
       if(typ != null){
 	title1 = document.createElement('div');
-	title1.setAttribute('class', 'label kb-area-title');
+	title1.setAttribute('class', 'kb-area-title');
 	title1.innerHTML = sectn.title;
 	sectn.elmnt.appendChild(title1);
       }
@@ -203,21 +202,21 @@ function Keyboard(){
       lst = new LetterSet();
       lst.title = lset;
       lst.elmnt = document.createElement('span');
-      lst.elmnt.setAttribute('class', 'kb-letter-set label');
+      lst.elmnt.setAttribute('class', 'kb-letter-set');
       lst.elmnt.setAttribute('id', lst.title);
       title2 = document.createElement('span');
-      title2.setAttribute('class', 'kb-letter-set-title badge');
+      title2.setAttribute('class', 'kb-letter-set-title');
       title2.innerHTML = lst.title;
       lst.elmnt.appendChild(title2);
       kgp = document.createElement('span');
-      kgp.setAttribute('class', 'kb-btn-group btn-group');
+      kgp.setAttribute('class', 'kb-btn-group');
       for(lettr in dictref){
 	let = new Letter();
 	let.letter = lettr;
 	let.isScript = checkCharWidth(lettr);
 	let.title = dictref[lettr] != undefined ? dictref[lettr]:'';
 	let.elmnt = document.createElement('button');
-	let.elmnt.setAttribute('class', 'kb-letter btn');
+	let.elmnt.setAttribute('class', 'kb-letter');
 	let.elmnt.setAttribute('id', 'kbl'+let.letter);
 	let.elmnt.setAttribute('title', let.title);
 	let.elmnt.setAttribute('letter', let.letter);
@@ -305,7 +304,6 @@ function Keyboard(){
         e = window.event;
       var target = e.target != null ? e.target : e.srcElement;
       if(target == kb.html){
-	
 	if(e.keyCode == _specialCode['ESCAPE']){
 	  $('.kbclose').trigger('click');
 	}
@@ -376,7 +374,10 @@ function Keyboard(){
     
     $(((cls==null || cls.length == 0)?'textarea, input[type=text],input[type=textbox]':cls)).focusin(function(){
 	if(kb.focusBox != this || !isVisible){
-	  $(kb.html).slideDown(300, function(){$(this).bottomCenter()});
+	  $(kb.html).slideDown(300, function(){
+	    if(!isDragged)
+	      $(this).bottomCenter();
+	  });
 	  kb.focusBox = this;
 	  hotel=1;
 	  specialMode = false; 
@@ -385,23 +386,7 @@ function Keyboard(){
 	  isVisible = true;
 	}
     });
-    if(typeof cls!='string'){
-      $(cls).each(function(){
-	
-	$(':not('+this+')').focusin(function(){
-	  
-	  if(isVisible){
-	    $('.kbclose').toggle('click');
-	  }
-	});
-      });
-    }else{
-      $(':not('+cls+')').focusin(function(){
-	if(isVisible){
-	  $('.kbclose').toggle('click');
-	}
-      });
-    }
+    
     $('.kbclose').click(function(){
       kb.focusBox = null;
       $(kb.html).slideUp(300);
@@ -417,7 +402,7 @@ function Keyboard(){
     if(e == null){ e = window.event;}
     var target = e.target != null ? e.target : e.srcElement;
     if((e.button == 1 && window.event != null || e.button == 0) && e.target == kbtoolbar){
-      console.log('clicked');
+      
       _startX = e.clientX;
       _startY = e.clientY;
       _offsetX = extractNumber(kb.html.style.left);
@@ -434,21 +419,21 @@ function Keyboard(){
     }
   };
   this.OnMouseMove = function(e){
-    console.log('move');
+    
     if (e == null) 
       var e = window.event; 
     kb.html.style.left = (_offsetX + e.clientX - _startX) + 'px';
     kb.html.style.top = (_offsetY + e.clientY - _startY) + 'px';
-    console.log(kb.html.style.left +':'+ kb.html.style.top);
+    
   };
   this.OnMouseUp = function(e){
     if(isDragging){
-      console.log('click up');
       kb.html.style.zIndex = _oldZIndex;
       kb.html.focus();
       document.onmousemove = null;
       document.onselectstart = null;
       isDragging = false;
+      isDragged = true;
     }
   };
 }
@@ -490,7 +475,6 @@ function checkCharWidth(chr){
   document.body.removeChild(f);
   return h>0 ? false : true;
 }
-
 /*
  *
  * Copyright (c) 2010 C. F., Wong (<a href="http://cloudgen.w0ng.hk">Cloudgen Examplet Store</a>)
@@ -501,4 +485,44 @@ function checkCharWidth(chr){
 ﻿(function(k,e,i,j){k.fn.caret=function(b,l){var a,c,f=this[0],d=k.browser.msie;if(typeof b==="object"&&typeof b.start==="number"&&typeof b.end==="number"){a=b.start;c=b.end}else if(typeof b==="number"&&typeof l==="number"){a=b;c=l}else if(typeof b==="string")if((a=f.value.indexOf(b))>-1)c=a+b[e];else a=null;else if(Object.prototype.toString.call(b)==="[object RegExp]"){b=b.exec(f.value);if(b!=null){a=b.index;c=a+b[0][e]}}if(typeof a!="undefined"){if(d){d=this[0].createTextRange();d.collapse(true);
 d.moveStart("character",a);d.moveEnd("character",c-a);d.select()}else{this[0].selectionStart=a;this[0].selectionEnd=c}this[0].focus();return this}else{if(d){c=document.selection;if(this[0].tagName.toLowerCase()!="textarea"){d=this.val();a=c[i]()[j]();a.moveEnd("character",d[e]);var g=a.text==""?d[e]:d.lastIndexOf(a.text);a=c[i]()[j]();a.moveStart("character",-d[e]);var h=a.text[e]}else{a=c[i]();c=a[j]();c.moveToElementText(this[0]);c.setEndPoint("EndToEnd",a);g=c.text[e]-a.text[e];h=g+a.text[e]}}else{g=
 f.selectionStart;h=f.selectionEnd}a=f.value.substring(g,h);return{start:g,end:h,text:a,replace:function(m){return f.value.substring(0,g)+m+f.value.substring(h,f.value[e])}}}}})(jQuery,"length","createRange","duplicate");
-
+var drawHoshi = function(ctx) {
+ctx.save();
+ctx.beginPath();
+ctx.moveTo(0,0);
+ctx.lineTo(23.389164,0);
+ctx.lineTo(23.389164,24.436085);
+ctx.lineTo(0,24.436085);
+ctx.closePath();
+ctx.clip();
+ctx.strokeStyle = 'rgba(0,0,0,0)';
+ctx.lineCap = 'butt';
+ctx.lineJoin = 'miter';
+ctx.miterLimit = 4;
+ctx.save();
+ctx.restore();
+ctx.save();
+ctx.restore();
+ctx.save();
+ctx.translate(-298.40319,-522.03006);
+ctx.save();
+ctx.fillStyle = "#5258c1";
+ctx.strokeStyle = "rgba(0, 0, 0, 0)";
+ctx.transform(0.81953764,0,0,0.81953764,56.168909,96.425816);
+ctx.beginPath();
+ctx.moveTo(323.75,543.79076);
+ctx.lineTo(313.52487,541.82852);
+ctx.lineTo(306.11164,549.13931);
+ctx.lineTo(304.81811000000005,538.80827);
+ctx.lineTo(295.57432000000006,534.01702);
+ctx.lineTo(305.00000000000006,529.59433);
+ctx.lineTo(306.70026000000007,519.32239);
+ctx.lineTo(313.8191800000001,526.92006);
+ctx.lineTo(324.1137800000001,525.3629000000001);
+ctx.lineTo(319.0878400000001,534.4812000000001);
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+ctx.restore();
+ctx.restore();
+ctx.restore();
+};
