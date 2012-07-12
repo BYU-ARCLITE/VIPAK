@@ -55,14 +55,16 @@ function useVipak(arg1, arg2){
 }
 
 
-jQuery.fn.center = function () {
+jQuery.fn.bottomCenter = function () {
   this.css("position","fixed");
-  this.css("left", ( $(window).width() - this.width() ) / 2+$(window).scrollLeft() + "px");
+  this.css("top", Math.max(0, (($(window).height() - this.outerHeight()))) + "px");
+  console.log($(window).scrollTop());
+  this.css("left", ( $(window).width() - this.width() ) / 2 + "px");
   return this;
 }
 function Keyboard(){
-  var kb = this, typeModeIcon, isVisible=false;
-  var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode = false, 
+  var kb = this, typeModeIcon, isVisible=false, isDragging = false;
+  var alpha, beta, charlie, delta, foxtrot, gamma, hotel=1, specialMode = false, prevMode = false, kbtoolbar, 
   _specialCode = {
     BACKSPACE: 8,
     COMMA: 188,
@@ -88,6 +90,11 @@ function Keyboard(){
     TAB: 9,
     UP: 38
   };
+  var _startX = 0;            // mouse starting positions
+  var _startY = 0;
+  var _offsetX = 0;           // current element offset
+  var _offsetY = 0;
+  var _oldZIndex = 0;         // we temporarily increase the z-index during drag
   typeModeIcon = document.createElement('i');
   typeModeIcon.setAttribute('class', 'icon icon-leaf kbtyping');
   this.Left = [];
@@ -107,14 +114,8 @@ function Keyboard(){
     this.setBoxListener(boxSelector);
     this.setButtonListeners();
     this.setHotKeys();
-  };
-  this.normalKeyboard = function(dict){
-    
-    this.driver();
-  };
-  this.smallKeyboard = function(dict){
-    this.organize(dict, 0);
-    this.driver();
+    document.onmousedown = this.OnMouseDown;
+    document.onmouseup = this.OnMouseUp;
   };
   this.organize = function(dict, kbtype){
     if(dict == null || dict == undefined)
@@ -125,12 +126,12 @@ function Keyboard(){
     if(kbtype == null){
       kbtype = 0;
     }
-    var location, type, lset, lettr, sectn, lst, let, indx, title1, title2, posel, kgp, tmp, closeIcon, helpIcon, kbtoolbar;
+    var location, type, lset, lettr, sectn, lst, let, indx, title1, title2, posel, kgp, tmp, closeIcon, helpIcon, kbtoolbarbuttons;
     this.html = document.createElement('div');
-    this.html.setAttribute('class', 'kbwpr');
+    this.html.setAttribute('class', 'kb-wrapper');
     this.html.tabIndex = 1;
     kbtoolbar = document.createElement('div');
-    kbtoolbar.setAttribute('class', 'kbtoolbar');
+    kbtoolbar.setAttribute('class', 'kb-topbar');
     kbtoolbar.innerHTML = 'VIPAK&nbsp;';
     closeIcon = document.createElement('i');
     closeIcon.setAttribute('class', 'kbclose');
@@ -140,13 +141,16 @@ function Keyboard(){
     helpIcon.setAttribute('class', 'kbhelp');
     helpIcon.setAttribute('title', 'about VIPAK~\n Hotkeys - (focused in text box)\n  Activate: Ctrl+Shift\n  Deactivate: Esc');
     helpIcon.innerHTML = '?';
-    kbtoolbar.appendChild(helpIcon);
-    kbtoolbar.appendChild(closeIcon);
+    kbtoolbarbuttons = document.createElement('span');
+    kbtoolbarbuttons.setAttribute('class', 'kb-toolbar-right');
+    kbtoolbarbuttons.appendChild(helpIcon);
+    kbtoolbarbuttons.appendChild(closeIcon);
+    kbtoolbar.appendChild(kbtoolbarbuttons);
     this.html.appendChild(kbtoolbar);
     if(kbtype == 0){
       for(location in dict){
 	posel = document.createElement('span');
-	posel.setAttribute('id', 'kbpos'+location);
+	posel.setAttribute('id', 'kb-'+(location==0?'left':(location==1?'right':'center')));
 	
 	for(type in dict[location]){
 	  createKeySection(type);
@@ -187,10 +191,10 @@ function Keyboard(){
       sectn = new KeySection();
       sectn.title = typ;
       sectn.elmnt = document.createElement('div');
-      sectn.elmnt.setAttribute('class', 'kbsection');
+      sectn.elmnt.setAttribute('class', 'kb-section');
       if(typ != null){
 	title1 = document.createElement('div');
-	title1.setAttribute('class', 'label kbsectitle');
+	title1.setAttribute('class', 'label kb-area-title');
 	title1.innerHTML = sectn.title;
 	sectn.elmnt.appendChild(title1);
       }
@@ -199,21 +203,21 @@ function Keyboard(){
       lst = new LetterSet();
       lst.title = lset;
       lst.elmnt = document.createElement('span');
-      lst.elmnt.setAttribute('class', 'kblset label');
+      lst.elmnt.setAttribute('class', 'kb-letter-set label');
       lst.elmnt.setAttribute('id', lst.title);
       title2 = document.createElement('span');
-      title2.setAttribute('class', 'kblsetitle badge');
+      title2.setAttribute('class', 'kb-letter-set-title badge');
       title2.innerHTML = lst.title;
       lst.elmnt.appendChild(title2);
       kgp = document.createElement('span');
-      kgp.setAttribute('class', 'kbtng btn-group');
+      kgp.setAttribute('class', 'kb-btn-group btn-group');
       for(lettr in dictref){
 	let = new Letter();
 	let.letter = lettr;
 	let.isScript = checkCharWidth(lettr);
 	let.title = dictref[lettr] != undefined ? dictref[lettr]:'';
 	let.elmnt = document.createElement('button');
-	let.elmnt.setAttribute('class', 'kbletter btn');
+	let.elmnt.setAttribute('class', 'kb-letter btn');
 	let.elmnt.setAttribute('id', 'kbl'+let.letter);
 	let.elmnt.setAttribute('title', let.title);
 	let.elmnt.setAttribute('letter', let.letter);
@@ -356,7 +360,7 @@ function Keyboard(){
     };
   };
   this.setButtonListeners = function(){
-    $(this.html).find('.kbletter').click(function(){
+    $(this.html).find('.kb-letter').click(function(){
       cS = $(kb.focusBox).caret().start, cE = $(kb.focusBox).caret().end;
       str = $(kb.focusBox).attr('value');
       sub1 = str.substring(0,cS);
@@ -372,7 +376,7 @@ function Keyboard(){
     
     $(((cls==null || cls.length == 0)?'textarea, input[type=text],input[type=textbox]':cls)).focusin(function(){
 	if(kb.focusBox != this || !isVisible){
-	  $(kb.html).slideDown(300).center();
+	  $(kb.html).slideDown(300, function(){$(this).bottomCenter()});
 	  kb.focusBox = this;
 	  hotel=1;
 	  specialMode = false; 
@@ -398,8 +402,6 @@ function Keyboard(){
 	}
       });
     }
-    
-    
     $('.kbclose').click(function(){
       kb.focusBox = null;
       $(kb.html).slideUp(300);
@@ -407,10 +409,52 @@ function Keyboard(){
     });
     
     $(window).resize(function(){
-      $(kb.html).center();
+      $(kb.html).bottomCenter();
     });
   };
-
+  this.OnMouseDown = function(e){
+    var height = $(kb.html).outerHeight();
+    if(e == null){ e = window.event;}
+    var target = e.target != null ? e.target : e.srcElement;
+    if((e.button == 1 && window.event != null || e.button == 0) && e.target == kbtoolbar){
+      console.log('clicked');
+      _startX = e.clientX;
+      _startY = e.clientY;
+      _offsetX = extractNumber(kb.html.style.left);
+      _offsetY = extractNumber(kb.html.style.top);
+      _oldZIndex = kb.html.style.zIndex;
+      kb.html.style.height = height+'px';
+      kb.html.style.zIndex = 10000;
+      isDragging = true;
+      document.onmousemove = kb.OnMouseMove;
+      document.body.focus();
+      document.onselectstart = function () { return false; };
+      target.ondragstart = function() { return false; };
+      return false;
+    }
+  };
+  this.OnMouseMove = function(e){
+    console.log('move');
+    if (e == null) 
+      var e = window.event; 
+    kb.html.style.left = (_offsetX + e.clientX - _startX) + 'px';
+    kb.html.style.top = (_offsetY + e.clientY - _startY) + 'px';
+    console.log(kb.html.style.left +':'+ kb.html.style.top);
+  };
+  this.OnMouseUp = function(e){
+    if(isDragging){
+      console.log('click up');
+      kb.html.style.zIndex = _oldZIndex;
+      kb.html.focus();
+      document.onmousemove = null;
+      document.onselectstart = null;
+      isDragging = false;
+    }
+  };
+}
+function extractNumber(val){
+  var n = parseInt(val);
+  return n == null || isNaN(n) ? 0 : n;
 }
 function KeySection(){
   this.title = "";
