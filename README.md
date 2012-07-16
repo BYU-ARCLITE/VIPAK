@@ -44,7 +44,10 @@ This will give us a custom keyboard defined by the dictionary object that will o
   vipak(dictionary);
 </script>
 </code>
+
 This will give us a custom keyboard that can be used on any text input.
+
+Dictionary Types
 -------------------------------------------------------------------
 dictionary types
 
