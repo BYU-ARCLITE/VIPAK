@@ -18,32 +18,17 @@ How to use:
   It is recommended to set the charset to utf-8 so that the characters will render correctly.  This project comes encoded in utf-8.
   
 2. use the following call to use the keyboard:
-<code>
-<script>
+
   vipak(/* options */);
-</script>
-</code>
 
 3. options:
-<code>
-<script>
   vipak('.inputclass');
-</script>
-</code>
 This will cause the vipak to be used for anything with the class 'inputclass'.
 
-<code>
-<script>
   vipak('.inputclass', dictionary);
-</script>
-</code>
 This will give us a custom keyboard defined by the dictionary object that will operate on an input where class='inputclass'
 
-<code>
-<script>
   vipak(dictionary);
-</script>
-</code>
 
 This will give us a custom keyboard that can be used on any text input.
 
