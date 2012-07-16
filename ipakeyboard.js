@@ -67,7 +67,7 @@ jQuery.fn.bottomCenter = function () {
 }
 
 function Keyboard() {
-    var kb = this,
+    var kb = this, sectn,
         typeModeIcon, isVisible = false,
         isDragging = false,
         closeIcon, isDragged, leftResize, rightResize, bottomResize, topResize, middleResize,
@@ -173,7 +173,7 @@ function Keyboard() {
         if (kbtype === 0) {
             for (location in dict) {
                 posel = document.createElement('span');
-                posel.setAttribute('class', 'kb-' + (location === '0' ? 'left' : (location === '1' ? 'right' : 'center')));
+                posel.setAttribute('class', 'kb-' + (location === '0' ? 'center' : (location === '1' ? 'left' : 'right')));
                 for (type in dict[location]) {
                     createKeySection(type);
                     for (indx in dict[location][type]) {
@@ -181,26 +181,26 @@ function Keyboard() {
                             createLetterSet(dict[location][type][indx][lset]);
                         }
                         if (location === "0") {
-                            this.Left.push(sectn);
+                            this.Center.push(sectn);
                         }
                         if (location === "1") {
-                            this.Right.push(sectn);
+                            this.Left.push(sectn);
                         }
                         if (location === "2") {
-                            this.Center.push(sectn);
+                            this.Right.push(sectn);
                         }
                         posel.appendChild(sectn.elmnt);
                     }
                 }
                 this.html.appendChild(posel);
-                if(location === "0"){
+		if(location === "0"){this.position.center = posel;}
+                if(location === "1"){
 		  this.position.left = posel;
 		  middleResize = document.createElement('span');
 		  middleResize.setAttribute('class', 'kb-mid-resize');
 		  this.html.appendChild(middleResize);
 		}
-                if(location === "1"){this.position.right = posel;}
-                if(location === "2"){this.position.center = posel;}
+                if(location === "2"){this.position.right = posel;}
             }
         }
         if (kbtype === 1) {
@@ -212,7 +212,7 @@ function Keyboard() {
         }
         if (kbtype === 2) {
             lset = "~";
-            createKeySection();
+            createKeySection('');
             createLetterSet(dict);
             this.html.appendChild(sectn.elmnt);
         }
@@ -376,6 +376,7 @@ function Keyboard() {
         if (e === null) {
             e = window.event;
         }
+        kb.html.style.width = kb.html.offsetWidth-4+'px';
         resizingL=e.target===leftResize;
         resizingR=e.target===rightResize;
         resizingB=e.target===bottomResize;
@@ -416,13 +417,15 @@ function Keyboard() {
       var resizeY = _lastY - e.clientY;
       var curHeight = kb.html.offsetHeight - 4;
       var curWidth = kb.html.offsetWidth-4;
-      var leftWidth = kb.position.left.offsetWidth-2;
+      var leftWidth = kb.position.left? kb.position.left.offsetWidth-2:null;
       if(resizingL){
 	kb.html.style.left = (_offsetX + e.clientX - _startX) + 'px';
 	kb.html.style.width = curWidth + resizeX + 'px';
+	kb.resizeHeight();
       }
       if(resizingR){
 	kb.html.style.width = curWidth - resizeX + 'px';
+	kb.resizeHeight();
       }
       if(resizingB){
 	kb.html.style.height = curHeight - resizeY + 'px';
@@ -436,6 +439,7 @@ function Keyboard() {
 	if(kb.position.right){
 	  kb.position.right.style.width = curWidth - (leftWidth-resizeX)+'px';
 	}
+	kb.resizeHeight();
       }
       if(middleResize !== undefined){
 	middleResize.style.left = kb.position.left.offsetWidth+'px';
@@ -471,10 +475,11 @@ function Keyboard() {
     };
     this.resizeHeight = function(){
       var tb = kbtoolbar.offsetHeight;
-      var lh = this.position.left.offsetHeight;
-      var rh = this.position.right.offsetHeight;
-      console.log(this.html.offsetHeight + ':' +(lh+tb) + ' or ' + (rh+tb));
-      this.html.style.height = tb + (lh>rh?lh:rh)+'px';
+      var lh = this.position.left?this.position.left.offsetHeight:null;
+      var rh = this.position.left?this.position.right.offsetHeight:null;
+      var sh = !lh && !rh?$('.kb-wrapper > .kb-section').outerHeight():null;
+      console.log(this.html.offsetHeight + ':' +(sh+lh+tb) + ' or ' + (sh+rh+tb));
+      this.html.style.height = tb + (lh>rh?lh:(lh||rh?rh:sh))+'px';
     };
 }
 
@@ -639,8 +644,8 @@ var drawHoshi = function (ctx) {
 
 
 ipa_full = {
-    0	: {
-        "vowels": [{
+    1	: {
+        vowels: [{
             "A": {
                 "æ": "near-open front unrounded",
                 "ɐ": "near-open central",
@@ -687,7 +692,7 @@ ipa_full = {
                 "ʏ": "near-close near-front rounded"
             }
         }],
-        "consonants": [{
+        consonants: [{
             "B": {
                 "β": "voiced bilabial fricative",
                 "ʙ": "bilabial trill",
@@ -810,8 +815,8 @@ ipa_full = {
             }
         }]
     },
-    1: {
-        "diacritics": [{
+    2: {
+        diacritics: [{
             "~": {
                 "ʰ": "aspirated",
                 "ʷ": "labialized",
