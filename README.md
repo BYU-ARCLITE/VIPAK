@@ -7,14 +7,14 @@ How to use:
 
 
 1.  Include the following in the head of the page.
-<code>
+
 <head>
   <script type="text/javascript" src="jquery.js"></script>
   <script type="text/javascript" src="ipakeyboard.js"></script>
   <meta http-equiv="Content-Type" content="text/html;" charset="UTF-8" />
   <link href="vipak.css" rel="stylesheet" type="text/css" />
 </head>
-</code>
+
   It is recommended to set the charset to utf-8 so that the characters will render correctly.  This project comes encoded in utf-8.
   
 2. use the following call to use the keyboard:
