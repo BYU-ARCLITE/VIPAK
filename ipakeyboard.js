@@ -110,10 +110,14 @@ function Keyboard() {
     typeModeIcon.setAttribute('width', '24');
     typeModeIcon.setAttribute('height', '24');
     drawHoshi(typeModeIcon.getContext('2d'));
-    this.Left = [];
-    this.Right = [];
     this.Center = [];
-    this.position = {};
+    this.position = {
+      left: null,
+      right: null,
+      center: null,
+      column: []
+    };
+    this.colWrapper = null;
     this.parentId = null;
     this.focusBox = null;
     this.alphaSet = [];
@@ -141,6 +145,8 @@ function Keyboard() {
         this.html = document.createElement('div');
         this.html.setAttribute('class', 'kb-wrapper');
         this.html.tabIndex = 1;
+	this.colWrapper = document.createElement('div');
+	this.colWrapper.setAttribute('class', 'kb-col-wrapper');
 	leftResize = document.createElement('span');
 	leftResize.setAttribute('class', 'kb-left-resize');
 	rightResize = document.createElement('span');
@@ -180,27 +186,24 @@ function Keyboard() {
                         for (lset in dict[location][type][indx]) {
                             createLetterSet(dict[location][type][indx][lset]);
                         }
-                        if (location === "0") {
-                            this.Center.push(sectn);
-                        }
-                        if (location === "1") {
-                            this.Left.push(sectn);
-                        }
-                        if (location === "2") {
-                            this.Right.push(sectn);
-                        }
                         posel.appendChild(sectn.elmnt);
                     }
                 }
-                this.html.appendChild(posel);
-		if(location === "0"){this.position.center = posel;}
+                
+		if(location === "0"){
+		  this.position.center = posel;
+		  this.html.appendChild(posel);
+		}else{
+		  this.colWrapper.appendChild(posel);
+		}
                 if(location === "1"){
 		  this.position.left = posel;
 		  middleResize = document.createElement('span');
 		  middleResize.setAttribute('class', 'kb-mid-resize');
-		  this.html.appendChild(middleResize);
+		  this.colWrapper.appendChild(middleResize);
 		}
                 if(location === "2"){this.position.right = posel;}
+                if(Number(location) > 2){this.position.column.push(posel);}
             }
         }
         if (kbtype === 1) {
@@ -261,6 +264,7 @@ function Keyboard() {
             sectn.keyset.push(lst);
             sectn.elmnt.appendChild(lst.elmnt);
         }
+        this.html.appendChild(this.colWrapper);
     };
     this.writeToBox = function (chr, replaceLength) {
         var cStart, cEnd, str, output;
@@ -349,7 +353,11 @@ function Keyboard() {
             if (kb.focusBox !== this || !isVisible) {
                 $(kb.html).slideDown(300, function () {
                     if (!isDragged) $(this).bottomCenter();
-                    if(middleResize !== undefined){middleResize.style.left = kb.position.left.offsetWidth+'px';}
+                    if(middleResize !== undefined){
+		      middleResize.style.left = kb.position.left.offsetWidth+'px';
+		      kb.resizeHeight();
+		    }
+                    
                 });
                 kb.focusBox = this;
                 hotel = 1;
@@ -475,11 +483,13 @@ function Keyboard() {
     };
     this.resizeHeight = function(){
       var tb = kbtoolbar.offsetHeight;
-      var lh = this.position.left?this.position.left.offsetHeight:null;
-      var rh = this.position.left?this.position.right.offsetHeight:null;
-      var sh = !lh && !rh?$('.kb-wrapper > .kb-section').outerHeight():null;
+      var lh = this.position.left?this.position.left.offsetHeight:0;
+      var rh = this.position.left?this.position.right.offsetHeight:0;
+      var ch = this.position.center? this.position.center.offsetHeight:0;
+      var sh = !lh && !rh?$('.kb-wrapper > .kb-section').outerHeight():0;
+      this.colWrapper.style.height = (lh>rh?lh:rh) + 'px';
       console.log(this.html.offsetHeight + ':' +(sh+lh+tb) + ' or ' + (sh+rh+tb));
-      this.html.style.height = tb + (lh>rh?lh:(lh||rh?rh:sh))+'px';
+      this.html.style.height = tb + ((lh>rh?lh:rh)+sh+ch)+'px';
     };
 }
 
