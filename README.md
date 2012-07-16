@@ -1,6 +1,8 @@
 VIPAK
 =====
 
+View the readme to better read the documentation.
+
 jQuery virtual IPA keyboard to be used with text input fields
 
 How to use:
