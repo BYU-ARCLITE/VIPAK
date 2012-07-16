@@ -47,6 +47,15 @@ This will give us a custom keyboard defined by the dictionary object that will o
 
 This will give us a custom keyboard that can be used on any text input.
 
+5. Keyboard Shortcuts.
+  The shortcuts are defined by the dictionary primarily, but the keyboard will actively listen for the following:
+  ctrl + shift : If you are in the text area that is activated, this will activate a vipak 'type mode'.
+  esc: If you are in the activated text area, this will deactivate vipak 'type mode'.  If you are using the onscreen keyboard, it will hide the keyboard.
+  ctrl + esc: if you are in the activated text area, this will hide the keyboard and deactivate 'type mode', if in use.
+  
+  'type mode':
+    when in type mode, the onscreen keyboard contains hints defined by the dictionary on the keystroke key. if you type that character, it will cycle through the letters in that set of letters.
+
 Dictionary Types
 -------------------------------------------------------------------
 dictionary types
@@ -87,12 +96,3 @@ The following dictionary type must be used---
   }
 }
 where number is a number value. If the number is 0, then it will be centered [not yet supported].  1 will be main, and any other values will be floated to the right in columns.
-
-5. Keyboard Shortcuts.
-  The shortcuts are defined by the dictionary primarily, but the keyboard will actively listen for the following:
-  ctrl + shift : If you are in the text area that is activated, this will activate a vipak 'type mode'.
-  esc: If you are in the activated text area, this will deactivate vipak 'type mode'.  If you are using the onscreen keyboard, it will hide the keyboard.
-  ctrl + esc: if you are in the activated text area, this will hide the keyboard and deactivate 'type mode', if in use.
-  
-  'type mode':
-    when in type mode, the onscreen keyboard contains hints defined by the dictionary on the keystroke key. if you type that character, it will cycle through the letters in that set of letters.
