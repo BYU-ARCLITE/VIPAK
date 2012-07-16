@@ -70,8 +70,8 @@ function Keyboard() {
     var kb = this, sectn,
         typeModeIcon, isVisible = false,
         isDragging = false,
-        closeIcon, isDragged, leftResize, rightResize, bottomResize, topResize, middleResize,
-	resizingL, resizingR, resizingB, resizingT, resizingM, draggingBar;
+        closeIcon, isDragged, leftResize, rightResize, bottomResize, middleResize,
+	resizingL, resizingR, resizingB, resizingM, draggingBar;
     var alpha, beta, charlie, delta, foxtrot, gamma, hotel = 1,
         specialMode = false,
         prevMode = false,
@@ -153,12 +153,9 @@ function Keyboard() {
 	rightResize.setAttribute('class', 'kb-right-resize');
 	bottomResize = document.createElement('span');
 	bottomResize.setAttribute('class', 'kb-bottom-resize');
-	topResize = document.createElement('span');
-	topResize.setAttribute('class', 'kb-top-resize');
 	this.html.appendChild(leftResize);
 	this.html.appendChild(rightResize);
 	this.html.appendChild(bottomResize);
-	this.html.appendChild(topResize);
         kbtoolbar = document.createElement('div');
         kbtoolbar.setAttribute('class', 'kb-topbar');
         kbtoolbar.innerHTML = 'VIPAK&nbsp;';
@@ -388,11 +385,11 @@ function Keyboard() {
         resizingL=e.target===leftResize;
         resizingR=e.target===rightResize;
         resizingB=e.target===bottomResize;
-        resizingT=e.target===topResize;
+        
         resizingM=e.target===middleResize;
 	draggingBar = e.target===kbtoolbar;
         var target = e.target !== null ? e.target : e.srcElement;
-        if ((e.button === 1 && window.event !== null || e.button === 0) && (draggingBar||resizingL||resizingR||resizingB||resizingT||resizingM)) {
+        if ((e.button === 1 && window.event !== null || e.button === 0) && (draggingBar||resizingL||resizingR||resizingB||resizingM)) {
             _startX = e.clientX;
             _startY = e.clientY;
             _offsetX = extractNumber(kb.html.style.left);
@@ -427,20 +424,28 @@ function Keyboard() {
       var curWidth = kb.html.offsetWidth-4;
       var leftWidth = kb.position.left? kb.position.left.offsetWidth-2:null;
       if(resizingL){
+	if(kb.position.left.style.width){
+	  kb.position.left.style.width = leftWidth + resizeX/2 + 'px';
+	  if(kb.position.right){
+	    kb.position.right.style.width = curWidth - (leftWidth+resizeX/2)+'px';
+	  }
+	}
 	kb.html.style.left = (_offsetX + e.clientX - _startX) + 'px';
 	kb.html.style.width = curWidth + resizeX + 'px';
 	kb.resizeHeight();
       }
       if(resizingR){
+	if(kb.position.left.style.width){
+	  kb.position.left.style.width = leftWidth - resizeX/2 + 'px';
+	  if(kb.position.right){
+	    kb.position.right.style.width = curWidth - (leftWidth-resizeX/2)+'px';
+	  }
+	}
 	kb.html.style.width = curWidth - resizeX + 'px';
 	kb.resizeHeight();
       }
       if(resizingB){
 	kb.html.style.height = curHeight - resizeY + 'px';
-      }
-      if(resizingT){
-	kb.html.style.top = (_offsetY + e.clientY - _startY) + 'px';
-	kb.html.style.height = curHeight + resizeY + 'px';
       }
       if(resizingM){
 	kb.position.left.style.width = leftWidth - resizeX + 'px';
@@ -468,7 +473,6 @@ function Keyboard() {
 	  resizingL=false;
 	  resizingR=false
 	  resizingB=false;
-	  resizingT=false;
 	  resizingM=false;
 	  if(!draggingBar){
 	    kb.resizeHeight();
@@ -488,7 +492,7 @@ function Keyboard() {
       var ch = this.position.center? this.position.center.offsetHeight:0;
       var sh = !lh && !rh?$('.kb-wrapper > .kb-section').outerHeight():0;
       this.colWrapper.style.height = (lh>rh?lh:rh) + 'px';
-      console.log(this.html.offsetHeight + ':' +(sh+lh+tb) + ' or ' + (sh+rh+tb));
+      
       this.html.style.height = tb + ((lh>rh?lh:rh)+sh+ch)+'px';
     };
 }
