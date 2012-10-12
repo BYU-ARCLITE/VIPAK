@@ -35,6 +35,7 @@ var fr_dict = {
 	C:
 	{
 		"ç": null,
+		"Ç": null
 	}
 	'"':
 	{
