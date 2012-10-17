@@ -6,19 +6,22 @@
 		<meta http-equiv="Content-Type" content="text/html;" charset="UTF-8" />
 		<link href="vipak.css" rel="stylesheet" type="text/css" />
 		<script>
-		var kb;
-		$(function(){
-		  kb = vipak();
-		  
-		});
+			(function(){
+				var xhr = new XMLHttpRequest();
+				xhr.onreadystatechange = function(){
+					if(this.readyState == 4 && this.status >= 200 && this.status < 400){
+						vipak({selector:'.french',dict:JSON.parse(this.responseText)});
+						vipak({selector:'.ipa'});
+					}
+				};
+				xhr.open("GET","frenchdictionary.json",true);
+				xhr.send();
+			}());
 		</script>
 	</head>
 	<body>
-		<textarea class="coolboard" id="fulltext"></textarea>
-		<br />
-		<input type='text' >
-		<br />
-		<input type='textbox' >
+		IPA:<textarea class="ipa" id="fulltext"></textarea><br/>
+		FRENCH:<input class="french" type='textbox' >
 		
 	</body>
 </html>

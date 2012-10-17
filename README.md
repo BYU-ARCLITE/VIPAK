@@ -24,20 +24,20 @@ How to use:
   vipak(/* options */);
 
 3. options:
-  vipak('.inputclass');
-This will cause the vipak to be used for anything with the class 'inputclass'.
+  vipak({selector:'.inputclass'});
+This will cause the vipak to be used for anything with the class 'inputclass'. Selector can be any css selector or a DOM element.
 
-  vipak('.inputclass', dictionary);
+  vipak({selector:'.inputclass', dict: dictionary});
 This will give us a custom keyboard defined by the dictionary object that will operate on an input where class='inputclass'
 
-  vipak(dictionary);
-
+  vipak({dict:dictionary});
 This will give us a custom keyboard that can be used on any text input.
 
 5. Keyboard Shortcuts.
   The shortcuts are defined by the dictionary primarily, but the keyboard will actively listen for the following:
   ctrl + shift : If you are in the text area that is activated, this will activate a vipak 'type mode'.
   esc: If you are in the activated text area, this will deactivate vipak 'type mode'.  If you are using the onscreen keyboard, it will hide the keyboard.
+  ctrl: If you are in type mode, this will terminate cycling through the current character and start the next character.
   ctrl + esc: if you are in the activated text area, this will hide the keyboard and deactivate 'type mode', if in use.
   
   'type mode':
@@ -55,8 +55,7 @@ Example:
 or if you desire no title hints,
 {foo : null, a:null} 
 
-Medium size keyboard:
-You must use the following format in the dictionary:
+Medium size keyboard format:
 {
   keystroke:
     {
@@ -65,9 +64,7 @@ You must use the following format in the dictionary:
 }
 where the first object key is the keystroke key, which is recommended to be one character long and a typable character.  The last value may be null, but must be called as: {'char':null}.
 
-Full sized keyboard:
-The following dictionary type must be used---
-
+Full sized keyboard format:
 {
   number:
   {
