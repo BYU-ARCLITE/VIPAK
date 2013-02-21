@@ -21,7 +21,7 @@ Create a JavaScript file. Use this template:
 
     $(function() {
         keyboard.keyGroups = [
-      	["a", "e", "i", "o", "u"],
+      	    ["a", "e", "i", "o", "u"],
     		["x", "y", "z"]
     	];
     	keyboard.init();
